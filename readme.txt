@@ -6,15 +6,15 @@ Requires at least: 2.7
 Tested up to: 3.2.1
 Stable tag: 3.2.1
  
-Retrieve the feed of a public Facebook page. You will have to have/create a facebook application as this plugin uses facebook's graph API.
+Retrieve the feed of a public Facebook page. You will need to have have or create a Facebook application as this plugin uses facebook's graph API.
 
 == Description ==
 
-Retrieve the feed of a public Facebook page using the Facebook Graph API and the Facebook PHP SDK. You will have to have/create a facebook application to use this plugin as facebook requires it to use their graph api.
+Retrieve the feed of a public Facebook page using the Facebook Graph API and the Facebook PHP SDK. You will need to have have or create a Facebook application to use this plugin. Facebook requires it to use their graph api.
 
-At this time no default styles are provided for the output of this plugin. Hope to add that in the next version.
+At this time no default styles are provided for the output of this plugin. I hope to add that in the next version.
 
-If you do not set a valid facebook App Id & Secret you will get a "PHP Fatal error:  Uncaught OAuthException: Invalid OAuth access token signature." when you try to display a feed.
+If you do not set a valid facebook App Id & Secret you will get a "PHP Fatal error:  Uncaught OAuthException: Invalid OAuth access token signature." when you try to display a feed. You can verify your App Id & Secret from the options page!
 
 == Installation ==
 
