@@ -1,0 +1,46 @@
+#fb-feed {
+	padding: 1px 5px;
+}
+#fb-feed .fb-feed-item {
+	border-top: 1px dotted;
+	margin: 8px 0px;
+	padding-top: 5px;
+}
+#fb-feed .fb-feed-item:first-child {
+	border: 0px;
+	margin-top: 4px;
+}
+#fb-feed p {
+	font-size: 100%;
+	margin: 4px 0px;
+	padding: 0px;
+}
+#fb-feed p.fb-page-name {
+	/* The facebook icon has been shared by WPZOOM Social Networking Icon Set by WPZOOM under the Creative Commons Attribution-Share Alike 3.0 Unported License. http://www.wpzoom.com */
+	background: url('images/facebook.png') no-repeat scroll left center;
+	font-size: 125%;
+	font-weight: bold;
+	margin-top: 8px;
+	min-height: 24px;
+	padding-left: 28px;
+	text-align: left;
+}
+#fb-feed p.descript {
+	margin-top: 4px;
+	text-align: left;
+}
+#fb-feed blockquote {
+	border-left: 5px solid #DDDDDD;
+    margin: 10px 0 0;
+    padding: 4px 0px 4px 10px;
+	text-align: left;
+}
+#fb-feed blockquote p {
+	text-align: left;
+}
+#fb-feed blockquote a {
+	display: inline-block;
+	margin-bottom: 8px;
+}
+#fb-feed .fb-date {
+}
