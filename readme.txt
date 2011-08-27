@@ -4,7 +4,7 @@ Donate link:
 Tags: Facebook, Social Networking
 Requires at least: 2.8
 Tested up to: 3.2.1
-Stable tag: 0.5
+Stable tag: 0.5.1
  
 Retrieve the feed of a public Facebook page. You will need to have have or create a Facebook application as this plugin uses facebook's graph API.
 
@@ -40,6 +40,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're to a
 
 == Changelog ==
 
+= 0.5.1 =
+* Fixed bug. Default page id would not save properly due to using intval()…
+
 = 0.5 =
 * Fixed type-o on the options page.
 * Changed 'Restore Defaults Upon Reactivation?' to 'Delete Options on Deactivation'.
@@ -61,6 +64,11 @@ Because you have either supplied an invalid App Id & Secret combo or you're to a
 
 == Upgrade Notice ==
 
+= 0.5.1 =
+* Fixes bug in 0.5 where the default page it wouldn't save correctly.
+
+My apologies to those who jumped on 0.5 only to find see bug and upgrade again very soon after. I thought I had already fixed it…
+
 = 0.5 =
 * Improved the output of statuses. When you upgrade please be sure to visit the options page and review/update it.
 
@@ -69,7 +77,3 @@ Because you have either supplied an invalid App Id & Secret combo or you're to a
 * Improve the html output by adding support for shared photos and notes.
 * Change fb_feed to be in class? (will leave an alias for a versions when I do)
 * Add Shortcode access.
-
-== Known Bugs ==
-
-* Options page will not properly save the default page id. Thought i fixed it but still have have it. Of the three of four wordpress instalations I've tested on only one of the them has dont it. Temporary solution is to hard code the page id when calling `fb_feed()`.

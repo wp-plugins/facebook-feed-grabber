@@ -340,7 +340,7 @@ class ffg_admin {
 
 			// Tell wp of the error (wp 3+)
 			if ( function_exists('add_settings_error') )
-				add_settings_error( 'ffg_app_id', 'app-id', __('You do not appear to have proivided a valid App Id for your Facebook Application.') );
+				add_settings_error( 'ffg_app_id', 'app-id', __('You do not appear to have provided a valid App Id for your Facebook Application.') );
 
 		} else
 			$input['app_id'] = trim($input['app_id']);
@@ -358,7 +358,7 @@ class ffg_admin {
 			$input['secret'] = trim($input['secret']);
 
 		// Misc Settigns
-		$input['default_feed'] = intval($input['default_feed']) !== 0 ? intval($input['default_feed']) : null;
+		$input['default_feed'] = ctype_digit($input['default_feed']) !== false ? $input['default_feed'] : null;
 		$input['num_entries'] = intval($input['num_entries']);
 		$input['limit'] = ( isset($input['limit']) ) ? 1 : 0;
 		
