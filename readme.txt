@@ -4,7 +4,7 @@ Donate link:
 Tags: Facebook, Social Networking
 Requires at least: 2.8
 Tested up to: 3.2.1
-Stable tag: 0.4.1
+Stable tag: 0.5
  
 Retrieve the feed of a public Facebook page. You will need to have have or create a Facebook application as this plugin uses facebook's graph API.
 
