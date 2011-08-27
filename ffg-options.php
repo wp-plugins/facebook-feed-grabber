@@ -38,7 +38,7 @@ class ffg_admin {
 		add_settings_field('ffg_default_feed', __('Default Feed'), array(&$this, 'default_feed_field'), __file__, 'misc_settings');
 		add_settings_field('ffg_num_entries', __('Number of Entries'), array(&$this, 'num_entries_field'), __file__, 'misc_settings');
 		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array(&$this, 'limit_checkbox'), __FILE__, 'misc_settings');
-		add_settings_field('ffg_default_style', __('Use Default Styles'), array(&$this, 'default_style_checkbox'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_style_sheet', __('Styles Sheet'), array(&$this, 'style_sheet_radio'), __FILE__, 'misc_settings');
 		add_settings_field('delete_options', __('Delete Options on Deactivation'), array(&$this, 'delete_options_checkbox'), __FILE__, 'misc_settings');
 		
 	}
@@ -121,7 +121,7 @@ class ffg_admin {
 			wp_die( __('You do not have sufficient permissions to access this page.') );
 		?>
 		<div class="wrap">
-			<div class="icon32" id="icon-options-general"><br></div>
+			<div class="icon32" id="icon-options-general"><br /></div>
 			<h2><?php _e('Facebook Feed Grabber') ?></h2>
 			<form action="options.php" method="post">
 			<?php settings_fields('facebook-feed-grabber'); ?>
@@ -233,13 +233,14 @@ class ffg_admin {
 		Use default style sheet checkbox. 
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function default_style_checkbox() {
+	function style_sheet_radio() {
 		$options = get_option('ffg_options');
-		$checked =  $options['default_style'] ? ' checked="checked" ' : null;
 		?>
 		<fieldset>
-			<legend class="screen-reader-text"><span><?php _e('Use the default style sheet.') ?></span></legend>
-			<label for="default_style"><input <?php echo $checked; ?> type="checkbox" value="1" id="default_style" name="ffg_options[default_style]"> <?php _e("When checked the styles provided with this plugin will be used.") ?></label>
+			<legend class="screen-reader-text"><span>Date Format</span></legend>
+			<label title="F j, Y"><input type="radio"<?php echo ( !isset($options['style_sheet']) || $options['style_sheet'] == 'style.css' ) ? 'checked="checked"' : null; ?> value="style.css" name="ffg_options[style_sheet]"> <span>Use Default Style Sheet</span></label><br />
+			<label title="Y/m/d"><input type="radio"<?php echo (  $options['style_sheet'] == 'style-2.css' ) ? 'checked="checked"' : null; ?> value="style-2.css" name="ffg_options[style_sheet]"> <span>Use Secondary Style Sheet</span> <span class="description"><?php _e('More specific in it\'s declarations than the default. (Requires container to have an id of "fb-feed".)') ?></span></label><br />
+			<label title="m/d/Y"><input type="radio"<?php echo ( $options['style_sheet'] == false ) ? 'checked="checked"' : null; ?> value="0" name="ffg_options[style_sheet]"> <span>I'll Define My Own Styles.</span></label><br />
 		</fieldset>
 		<?php
 	}
@@ -319,10 +320,18 @@ class ffg_admin {
 	}
 	// End verify_app_cred()
 	
+	
+	/* - - - - - -
+		
+		Validate our options.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function validate_options( $input ) {
 
 		if (!current_user_can('manage_options'))
 			wp_die( __('You do not have sufficient permissions to access this page.') );
+		
+		// Wordpress should be handling the nonce.
 
 		// Validate App Id
 		if ( !preg_match('/^[0-9]{10,}$/', trim($input['app_id'])) ) {
@@ -352,7 +361,28 @@ class ffg_admin {
 		$input['default_feed'] = intval($input['default_feed']) !== 0 ? intval($input['default_feed']) : null;
 		$input['num_entries'] = intval($input['num_entries']);
 		$input['limit'] = ( isset($input['limit']) ) ? 1 : 0;
-		$input['default_style'] = ( isset($input['default_style']) ) ? 1 : 0;
+		
+		if ( isset($input['style_sheet']) ) {
+			switch ( trim($input['style_sheet']) ) {
+				
+				case 'style.css':
+				case 'style-2.css':
+				
+					$input['style_sheet'] = trim($input['style_sheet']);
+					
+					break;
+				
+				default:
+					
+					$input['style_sheet'] = 0;
+					
+					break;
+				
+			}
+		} else
+			$input['style_sheet'] = 'style.css';
+		// End if isset($input['style_sheet'])
+		
 		$input['delete_options'] = ( isset($input['delete_options']) ) ? 1 : 0;
 
 		return $input;

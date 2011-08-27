@@ -12,7 +12,7 @@ Retrieve the feed of a public Facebook page. You will need to have have or creat
 
 Retrieve the feed of a public Facebook page using the Facebook Graph API and the Facebook PHP SDK. You will need to have have or create a Facebook application to use this plugin. Facebook requires it to use their graph api.
 
-At this time no default styles are provided for the output of this plugin. I hope to add that in the next version.
+At this time it only displays things marked as a status, link or video.
 
 If you do not set a valid facebook App Id & Secret you will get a "PHP Fatal error:  Uncaught OAuthException: Invalid OAuth access token signature." when you try to display a feed. You can verify your App Id & Secret from the options page!
 
@@ -40,13 +40,15 @@ Because you have either supplied an invalid App Id & Secret combo or you're to a
 
 == Changelog ==
 
-= 0.4.2 =
+= 0.5 =
 * Fixed type-o on the options page.
 * Changed 'Restore Defaults Upon Reactivation?' to 'Delete Options on Deactivation'.
 * Changed fb_feed() argument scheme to be fb_feed( $page_id, $args ).
-* Moved the options page stuff to be in the class ffg_admin().
-* Improved HTML output of fb_feed.
-* Secured options be adding esc_attr() to fields on options page.
+* Moved the options page functions to be in the class ffg_admin().
+* Changed HTML output of fb_feed() to make more sense.
+* Changed fb_feed() to show who shared a post when not limited to posts from page.
+* Changed fb_feed() to show the name of the page feed being retrieved. Can disable this by calling fb_feed($page_id, array( 'show_title' => false ));
+* Secured options by adding esc_attr() to fields on options page.
 * Added 'Default Feed' field to options.
 * Added a default style sheet.
 * Added 'Use Default Style' field to options.
@@ -62,4 +64,6 @@ Because you have either supplied an invalid App Id & Secret combo or you're to a
 
 == Next Version ==
 
-In the next version I hope to improve the output html and add a default css style sheet.
+* Improve the html output by adding support for shared photos and notes.
+* Change fb_feed to be in class? (will leave an alias for a versions when I do)
+* Add Shortcode access.

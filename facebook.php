@@ -166,7 +166,7 @@ function format_date( $published, $format = 'feed', $unixTimestamp = true ) {
 		$published = $timestamp;
 		
 	/*
-		TODO : Make timezone based on if user is logged into facebook and use that timezone?
+		LBTD : Make timezone based on if user is logged into facebook and use that timezone?
 	*/
 	
 	// Convert to our wp timezone
@@ -240,7 +240,7 @@ function fb_feed( $id = null, $args = array()) {
 		'echo' => true,
 		'container' => 'div',
 		'container_id' => 'fb-feed',
-		'container_class' => null,
+		'container_class' => 'fb-feed',
 		'limit' => $options['limit'],
 		'maxitems' => $options['num_entries'],
 		'show_title' => true
@@ -268,7 +268,7 @@ function fb_feed( $id = null, $args = array()) {
 		// Count the items as we use them.
 		$count = 0;
 		
-		// Open the container element.
+		// Open the container element?
 		if ( $container != null ) {
 			
 			$container_id = ( $container_id != null ) ? " id='". $container_id ."'" : null;
@@ -277,14 +277,17 @@ function fb_feed( $id = null, $args = array()) {
 			
 		}
 		
-		// Get the page title.
+		// Get the page title ?
 		if ( $show_title == true ) {
 			
 			// This call will always work since we are fetching public data.
 			$app = $facebook->api('/'. $id .'?date_format=U');
 
+			/*
+				LBTD : Add function argument and option to make this a link
+			*/
 			if ( $app ) {
-				$output .= "<p class='fb-page-name'>". $app['name'] ."</p>\n";
+				$output .= "<p class='fb-page-name'><a href='". $app['name'] ."' alt='". $app['name'] ."'>". $app['name'] ."</a></p>\n";
 			}
 			
 		}
@@ -292,15 +295,27 @@ function fb_feed( $id = null, $args = array()) {
 		foreach($content['data'] as $item) {
 						
 			// If we're limiting it to posts posted by the retrieved page
-			if ( $limit == true && $id != $item['from']['id'] )
-				continue;
+			if ( $limit == true ) {
+			
+				if ( $id != $item['from']['id'] )
+					continue;
+					
+			} else {
+				
+				// It's not limited to the pages posts so lets get who posted it.
+				
+				$from = "<p class='from'>";
+					$from .= "<a href='http://www.facebook.com/". $item['from']['id'] ."'>". $item['from']['name'] ."</a>";
+				$from .= "</p>\n";
+				
+			}
 		
 			// Get the description of item or the message of the one who posted the item
-			$message = isset($item['message']) ? $item['message'] : null;
+			$message = isset($item['message']) ? trim($item['message']) : null;
 			$message = preg_replace('/\n/', '<br />', $message);
 						
 			// Get the description of item or the message of the one who posted the item
-			$descript = isset($item['description']) ? $item['description'] : null;
+			$descript = isset($item['description']) ? trim($item['description']) : null;
 			$descript = preg_replace('/\n/', '<br />', $descript);
 			
 			// If it's an event…
@@ -343,65 +358,96 @@ function fb_feed( $id = null, $args = array()) {
 			$item_link = preg_split('/_/', $item['id']);
 			$item_link = 'http://www.facebook.com/'. $item_link[0] .'/posts/'. $item_link[1];
 			
-			// 
-			// Start creating the output
-			// 
-			
+			// Item opening tag
 			$item_start = "<div class='fb-feed-item fb-item-". $count ."' id='fb-feed-". $item['id'] ."'>\n";
 	
+			// The published date
 			$date = "<p class='fb-date'>";
 				$date .= "<a href='". $item_link ."' target='_blank' class='quiet' title='". __('See this post on Facebook') ."'>". $published . $comments ."</a>";
 			$date .= "</p>\n";
 			
-			$item_end = "</div>\n";// End .fb_feed_item
+			// Item closing tag
+			$item_end = "</div>\n";
 				
-					switch ( $item['type'] ) {
-						case 'link':
+			switch ( $item['type'] ) {
+				case 'link':
+				
+						$output .= $item_start;
 						
-								$output .= $item_start;
+						if ( $limit == false )
+							$output .= $from;
+						
+						if ( $message != null  )
+							$output .= "<p class='message'>". $message ."</p>";
+						
+						$output .= "<blockquote><p>";
+						
+							$output .= "<a href='". esc_attr($item['link']) ."'>". $item['name'] ."</a>\n";
+							
+						
+							if ( $descript != null )
+								$output .= "<span class='descript'>". $descript ."</span>\n";
+							
+							if ( $descript != null && $properties != null )
+								$output .= "<br /><br />";
+							
+							if ( $properties != null )
+								$output .= $properties;
 								
-								if ( $message != null  )
-									$output .= "<p class='descript'>". $message ."</p>";
-								
-								$output .= "<blockquote><p>";
-								
-									$output .= "<a href='". esc_attr($item['link']) ."'>". $item['name'] ."</a>\n";
-									
-									if ( $message != null || $descript != null || $properties != null )
-										$output .= "<br />";
-								
-									if ( $descript != null )
-										$output .= $descript;
-									
-									if ( $descript != null && $properties != null )
-										$output .= "<br /><br />";
-									
-									if ( $properties != null )
-										$output .= $properties;
-										
-								$output .= "</p></blockquote>\n";
-								
-								$output .= $date;
-								
-								$output .= $item_end;
-																								
-							break;
+						$output .= "</p></blockquote>\n";
+						
+						$output .= $date;
+						
+						$output .= $item_end;
+																						
+					break;
+			
+				case 'status':
 					
-						case 'status':
-							
-							if ( $message == null && $descript == null )
-								continue;
-							
-							$output .= $item_start;
-							
-								$output .= "<p class='descript'>". $message ."</p>\n";
-								
-								$output .= $date;
-							
-							$output .= $item_end;
-							
-							break;
-					}
+					if ( $message == null && $descript == null )
+						continue 2;
+					
+					$output .= $item_start;
+						
+						if ( $limit == false )
+							$output .= $from;
+					
+						$output .= "<p class='descript'>". $message ."</p>\n";
+						
+						$output .= $date;
+					
+					$output .= $item_end;
+					
+					break;
+					
+				case 'video':
+					
+				$output .= $item_start;
+				
+				if ( $limit == false )
+					$output .= $from;
+				
+				if ( $message != null  )
+					$output .= "<p class='message'>". $message ."</p>";
+				
+				$output .= "<blockquote><p>";
+				
+					$output .= "<a href='". esc_attr($item['source']) ."'>". $item['name'] ."</a>\n";
+				
+					if ( $descript != null )
+						$output .= "<span class='descript'>". $descript ."</span>\n";
+						
+				$output .= "</p></blockquote>\n";
+				
+				$output .= $date;
+				
+				$output .= $item_end;
+					
+					break;
+				
+				default:
+					continue 2;
+			}
 								
 			// Add one to our count tally
 			$count++;
@@ -426,6 +472,7 @@ function fb_feed( $id = null, $args = array()) {
 	} else
 		return false;
 }
+// End fb_feed()
 
 /* - - - - - -
 	
@@ -436,12 +483,11 @@ function ffg_add_style() {
 	
 	$options = get_option('ffg_options');
 	
-	if ( $options['default_style'] == false )
+	if ( $options['style_sheet'] == false )
 		return false;
 
 	// Paths to the file.
-	$style_url = plugins_url('style.css', __FILE__);
-	$style_file = WP_PLUGIN_DIR . '/facebook-feed-grabber/style.css';
+	$style_url = plugins_url($options['style_sheet'], __FILE__);
 
 	wp_register_style('ffg_style', $style_url);
 	wp_enqueue_style( 'ffg_style');
