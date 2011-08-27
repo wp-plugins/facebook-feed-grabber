@@ -43,27 +43,33 @@ Because you have either supplied an invalid App Id & Secret combo or you're to a
 = 0.5 =
 * Fixed type-o on the options page.
 * Changed 'Restore Defaults Upon Reactivation?' to 'Delete Options on Deactivation'.
-* Changed fb_feed() argument scheme to be fb_feed( $page_id, $args ).
+* Changed `fb_feed()` argument scheme to be `fb_feed( $page_id, $args )`.
 * Moved the options page functions to be in the class ffg_admin().
-* Changed HTML output of fb_feed() to make more sense.
-* Changed fb_feed() to show who shared a post when not limited to posts from page.
-* Changed fb_feed() to show the name of the page feed being retrieved. Can disable this by calling fb_feed($page_id, array( 'show_title' => false ));
+* Changed HTML output of `fb_feed()` to make more sense.
+* Changed `fb_feed()` to show who shared a post when not limited to posts from page.
+* Changed `fb_feed()` to show the name of the page feed being retrieved. Can disable this by calling `fb_feed($page_id, array( 'show_title' => false ))`.
 * Secured options by adding esc_attr() to fields on options page.
 * Added 'Default Feed' field to options.
 * Added a default style sheet.
-* Added 'Use Default Style' field to options.
+* Added 'Style Sheet' choice to options.
 
 = 0.4.1 =
 * Fixed/Improved the plugin description. 
 
 = 0.4 =
-* Has an options page and fb_feed($page_id) function. 
+* Has an options page and `fb_feed($page_id)` function. 
 
 == Upgrade Notice ==
 
+= 0.5 =
+* Improved the output of statuses. When you upgrade please be sure to visit the options page and review/update it.
 
 == Next Version ==
 
 * Improve the html output by adding support for shared photos and notes.
 * Change fb_feed to be in class? (will leave an alias for a versions when I do)
 * Add Shortcode access.
+
+== Known Bugs ==
+
+* Options page will not properly save the default page id. Thought i fixed it but still have have it. Of the three of four wordpress instalations I've tested on only one of the them has dont it. Temporary solution is to hard code the page id when calling `fb_feed()`.
