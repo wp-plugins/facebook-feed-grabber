@@ -1,8 +1,8 @@
 === Facebook Feed Grabber ===
-Contributors: 
+Contributors: bonnerl
 Donate link: 
 Tags: Facebook, Social Networking
-Requires at least: 2.7
+Requires at least: 2.8
 Tested up to: 3.2.1
 Stable tag: 0.4.1
  
@@ -21,7 +21,8 @@ If you do not set a valid facebook App Id & Secret you will get a "PHP Fatal err
 1. Upload `facebook-feed-grabber/` to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Go to the Facebook Feed Grabber options page and enter your Facebook App Id and Secret.
-4. Place `<?php fb_feed( $page_id ); ?>` in your templates.
+4. Set your default page id. (optional).
+4. Place `<?php fb_feed( $page_id (optional), $args (optional)  ); ?>` in your templates. If you did not set a default page id then you must pass the $page_id to the function.
 
 == Frequently Asked Questions ==
 
@@ -29,12 +30,32 @@ If you do not set a valid facebook App Id & Secret you will get a "PHP Fatal err
 
 First you will need a facebook account, then you must register as a facebook developer at https://www.facebook.com/developers/apps.php where you can then create your facebook application.
 
+= Why do I get a "PHP Fatal error:  Uncaught OAuthException: Invalid OAuth access token signature." =
+
+Because you have either supplied an invalid App Id & Secret combo or you're to access a private feed.
+
 == Screenshots ==
 
+1. The options page.
 
 == Changelog ==
 
-0.4 Has an options page and fb_feed($page_id) function. 
+= 0.4.2 =
+* Fixed type-o on the options page.
+* Changed 'Restore Defaults Upon Reactivation?' to 'Delete Options on Deactivation'.
+* Changed fb_feed() argument scheme to be fb_feed( $page_id, $args ).
+* Moved the options page stuff to be in the class ffg_admin().
+* Improved HTML output of fb_feed.
+* Secured options be adding esc_attr() to fields on options page.
+* Added 'Default Feed' field to options.
+* Added a default style sheet.
+* Added 'Use Default Style' field to options.
+
+= 0.4.1 =
+* Fixed/Improved the plugin description. 
+
+= 0.4 =
+* Has an options page and fb_feed($page_id) function. 
 
 == Upgrade Notice ==
 

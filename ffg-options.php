@@ -1,241 +1,370 @@
 <?php
 
-/* - - - - - -
+class ffg_admin {
 	
-	Add our menu and hook in our javascript.
 	
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-function ffg_add_menu() {
+	/* - - - - - -
 	
-	$page = add_options_page('Facebook Feed Grabber Options', 'Facebook Feed Grabber', 'manage_options', __file__, 'ffg_options');
+		Add our menu and hook in our javascript and styles.
+	
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function add_menu() {
+	
+		$page = add_options_page('Facebook Feed Grabber Options', 'Facebook Feed Grabber', 'manage_options', __file__, array(&$this, 'options_page'));
 
-	add_action( "admin_print_scripts-". $page, 'ffg_options_js' );
-	add_action( "admin_print_styles-". $page, 'ffg_options_css' );
-}
-add_action('admin_menu', 'ffg_add_menu');
+		add_action( "admin_print_scripts-". $page, array(&$this, 'javascript') );
+		add_action( "admin_print_styles-". $page, array(&$this, 'css') );
+	}
+	// End add_menu()
+	
+	
+	/* - - - - - -
+		
+		Register our settings.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function settings_api_init() {
+		
+		register_setting( 'facebook-feed-grabber', 'ffg_options', array(&$this, 'validate_options') ); 
 
-/* - - - - - -
-	
-	Javascript for the options page…
-	
-		-hooked in from the ffg_add_menu() function
-	
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-function ffg_options_js() {
-	// Url to plugin directory
-	 $plugin_url = trailingslashit( get_bloginfo('wpurl') ).PLUGINDIR.'/'. dirname( plugin_basename(__FILE__) );
-	
-	// Include our scripts.
-	wp_enqueue_script('jquery');
-	wp_enqueue_script('ffg_options', $plugin_url .'/options.js', array('jquery'));
-	
-	// We need to feed some stuff to our script
-	// This allows us to pass PHP variables to the Javascript code. We can pass multiple vars in the array.
-	wp_localize_script( 'ffg_options', 'ffg_options', array(
-		'wpurl' => get_bloginfo('wpurl'),
-		'nonce' => wp_create_nonce('ffg_verif_app_cred')
-		));
-	
-}
+		// App ID & Secret
+		add_settings_section('fb_app_info', __('Facebook App ID & Secret'), array(&$this, 'setting_section_callback_function'), __file__);
+		add_settings_field('ffg_app_id', __('App ID'), array(&$this, 'app_id_field'), __file__, 'fb_app_info');
+		add_settings_field('ffg_secret', __('App Secret'), array(&$this, 'secret_field'), __FILE__, 'fb_app_info');
+		add_settings_field('ffg_verify', __('Verify App Id & Secret'), array(&$this, 'verify_button'), __FILE__, 'fb_app_info');
 
-/* - - - - - -
+		// Misc
+		add_settings_section('misc_settings', __('Misc Settings'), array(&$this, 'setting_section_callback_function'), __file__);
+		add_settings_field('ffg_default_feed', __('Default Feed'), array(&$this, 'default_feed_field'), __file__, 'misc_settings');
+		add_settings_field('ffg_num_entries', __('Number of Entries'), array(&$this, 'num_entries_field'), __file__, 'misc_settings');
+		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array(&$this, 'limit_checkbox'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_default_style', __('Use Default Styles'), array(&$this, 'default_style_checkbox'), __FILE__, 'misc_settings');
+		add_settings_field('delete_options', __('Delete Options on Deactivation'), array(&$this, 'delete_options_checkbox'), __FILE__, 'misc_settings');
+		
+	}
+	// End settings_api_init()
 	
-	Javascript for the options page…
 	
-		-hooked in from the ffg_add_menu() function
+	/* - - - - - -
+
+		Javascript for the options page…
+
+			-hooked in from the add_menu() function
+
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function javascript() {
+		// Url to plugin directory
+		 $plugin_url = trailingslashit( get_bloginfo('wpurl') ).PLUGINDIR.'/'. dirname( plugin_basename(__FILE__) );
+
+		// Include our scripts.
+		wp_enqueue_script('jquery');
+		wp_enqueue_script('ffg_options', $plugin_url .'/options.js', array('jquery'));
+
+		// We need to feed some stuff to our script
+		// This allows us to pass PHP variables to the Javascript code. We can pass multiple vars in the array.
+		wp_localize_script( 'ffg_options', 'ffg_options', array(
+			'wpurl' => get_bloginfo('wpurl'),
+			'nonce' => wp_create_nonce('ffg_verif_app_cred')
+			));
+
+	}
+	// End javascript()
 	
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-function ffg_options_css() {
-	?>
-	<style type="text/css" media="screen">
-		.icon {
-			margin: 0px 6px 0px 5px;
-			vertical-align: middle;
+	
+	/* - - - - - -
+
+		Javascript for the options page…
+
+			-hooked in from the add_menu() function
+
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function css() {
+		?>
+		<style type="text/css" media="screen">
+			.icon {
+				margin: 0px 6px 0px 5px;
+				vertical-align: middle;
+			}
+		</style>
+		<?php
+	}
+	// End css()
+	
+	
+	/* - - - - - -
+		
+		The text to display for our setting's sections.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function setting_section_callback_function( $section ) {
+		switch ( $section['id'] ) {
+			case 'fb_app_info':
+				_e("<p>You will need a facebook App ID and Secret key. To get them you must register as a developer and create an application, which you can do from their <a href='https://developers.facebook.com/setup'>Create an App</a> page.</p>");
+				break;
+
+			case 'misc_settings':
+				_e("<p>Some Miscellaneous settings.</p>\n");
+				break;
+
 		}
-	</style>
-	<?php
-}
-
-/* - - - - - -
-	
-	Used to verify App Id & Secret from our options page.
-	
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-add_action('wp_ajax_ffg_verif_app_cred', 'ffg_verif_app_cred');
-function ffg_verif_app_cred() {
-	// global $wpdb; // this is how you get access to the database
-	
-	if ( !current_user_can('manage_options') ) {
-		echo __('You do not have sufficient permissions to access this page.');
-		die();
 	}
+	// End setting_section_callback_function
 	
-	check_ajax_referer( 'ffg_verif_app_cred', 'secure' );
 	
-	// Verify App ID
-	if ( !preg_match('/[0-9]{10,}/', trim($_POST['app_id'])) ) {
-		echo " Invalid App Id";
-		die();
-	} else
-		$result['app_id'] = trim($_POST['app_id']);
-	
-	// Verify Secret
-	if ( !preg_match('/[0-9a-z]{27,37}/i', trim($_POST['secret'])) ) {
-		echo "Invalid Secret";
-		die();
-	} else
-		$result['secret'] = trim($_POST['secret']);
+	/* - - - - - -
 		
-	// Try to make the connection
-	$facebook = new Facebook(array(
-		  'appId'  => $result['app_id'],
-		  'secret' => $result['secret']
-		));
-	
-	// If it couldn't connect…
-	if ( !$facebook ) {
-		echo 'Invalid';
-		die();
-	}
-	
-	// This call will always work since we are fetching public data.
-	$app = $facebook->api('/'. $result['app_id'] .'?date_format=U');
-	
-	if ( $app ) {
-		echo 'Name: '. $app['name'];
-	} else {
-		echo 'Invalid';
-	}
-
-	die(); // this is required to return a proper result
-}
-
-// 
-// Register our settings section and fields
-function ffg_settings_api_init() {
-	register_setting( 'facebook-feed-grabber', 'ffg_options', 'ffg_validate_options' ); 
-	
-	// App ID & Secret
-	add_settings_section('fb_app_info', 'Facebook App ID & Secret', 'ffg_setting_section_callback_function', __file__);
-	add_settings_field('ffg_app_id', 'App ID', 'ffg_app_id', __file__, 'fb_app_info');
-	add_settings_field('ffg_secret', 'App Secret', 'ffg_secret', __FILE__, 'fb_app_info');
-	add_settings_field('ffg_verify', 'Verify App Id & Secret', 'ffg_verify', __FILE__, 'fb_app_info');
-
-	// Misc
-	add_settings_section('misc_settings', 'Misc Settings', 'ffg_setting_section_callback_function', __file__);
-	add_settings_field('ffg_num_entries', 'Number of Entries', 'ffg_num_entries', __file__, 'misc_settings');
-	add_settings_field('restore_defaults', 'Restore Defaults Upon Reactivation?', 'ffg_restore_defaults', __FILE__, 'misc_settings');
-}// End ffg_settings_api_init()
-add_action('admin_init', 'ffg_settings_api_init');
-
-// The text to display for settings section
-function ffg_setting_section_callback_function( $section ) {
-	switch ( $section['id'] ) {
-		case 'fb_app_info':
-			echo "<p>You will need a facebook App ID and Secret key. To get them you must register as a developer and create an application which you can do from their <a href='https://developers.facebook.com/setup'>Create an App</a> page.</p>";
-			break;
+		The options page.
 		
-		case 'misc_settings':
-			echo "<p>Some Miscellaneous settings.</p>\n";
-			break;
-		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function options_page() {
+		if (!current_user_can('manage_options'))
+			wp_die( __('You do not have sufficient permissions to access this page.') );
+		?>
+		<div class="wrap">
+			<div class="icon32" id="icon-options-general"><br></div>
+			<h2><?php _e('Facebook Feed Grabber') ?></h2>
+			<form action="options.php" method="post">
+			<?php settings_fields('facebook-feed-grabber'); ?>
+			<?php do_settings_sections(__FILE__); ?>
+			<p class="submit">
+				<input name="Submit" type="submit" class="button-primary" value="<?php _e('Save Changes'); ?>" />
+			</p>
+			</form>
+		</div>
+		<?php
 	}
-}
-
-// 
-// App ID field
-function ffg_app_id() {
-	$options = get_option('ffg_options');
-	?>
-	<input type="text" name="ffg_options[app_id]" value="<?php echo $options['app_id']; ?>" class="regular-text" id="ffg-app-id" autocomplete="off" />
-	<span class="description">Required for the plugin to work…</span>
-	<?php
-}
-
-// 
-// Number of entries field
-function ffg_secret() {
-	$options = get_option('ffg_options');
-	?>
-	<input type="text" name="ffg_options[secret]" value="<?php echo $options['secret']; ?>" class="regular-text" id="ffg-secret" autocomplete="off" />
-	<span class="description">Required for the plugin to work</span>
-	<?php
-}
-
-// 
-// Number of entries field
-function ffg_verify() {
-	$options = get_option('ffg_options');
-	?>
-	<input type="button" name="ffg_verify" value="Verify App Credentials" class="button" id="ffg-verify" />
-	<span id="ffg_verify_d" class="description"></span>
-	<?php
-}
-
-// 
-// Number of entries field
-function ffg_num_entries() {
-	$options = get_option('ffg_options');
-	?>
-	<input type="text" name="ffg_options[num_entries]" value="<?php echo $options['num_entries']; ?>" class="regular-text" /> 
-	<span class="description">The default number of entries to display. If empty or set to 0, posts will not be limited.</span>
-	<?php
-}
-
-// CHECKBOX - Name: plugin_options[chkbox1]
-function ffg_restore_defaults() {
-	$options = get_option('ffg_options');
-	$checked =  $options['restore_defaults'] ? ' checked="checked" ' : null;
-	?>
-	<fieldset>
-		<legend class="screen-reader-text"><span>Membership</span></legend>
-		<label for="restore_defaults"><input <?php echo $checked; ?> type="checkbox" value="1" id="restore_defaults" name="ffg_options[restore_defaults]"> When check this plugins settings will be deleted on deactivation.</label>
-	</fieldset>
-	<?php
-}
-
-// The Options
-function ffg_options() {
-	if (!current_user_can('manage_options'))
-		wp_die( __('You do not have sufficient permissions to access this page.') );
-	?>
-	<div class="wrap">
-		<div class="icon32" id="icon-options-general"><br></div>
-		<h2>Facebook Feed Grabber</h2>
-		<form action="options.php" method="post">
-		<?php settings_fields('facebook-feed-grabber'); ?>
-		<?php do_settings_sections(__FILE__); ?>
-		<p class="submit">
-			<input name="Submit" type="submit" class="button-primary" value="<?php esc_attr_e('Save Changes'); ?>" />
-		</p>
-		</form>
-	</div>
-	<?php
-}
-
-function ffg_validate_options( $input ) {
 	
-	if (!current_user_can('manage_options'))
-		wp_die( __('You do not have sufficient permissions to access this page.') );
 	
-	// Validate App Id
-	if ( !preg_match('/^[0-9]{10,}$/', trim($input['app_id'])) ) {
-		$input['app_id'] = null;
-		add_settings_error( 'ffg_app_id', 'app-id', __('You do not appear to have proivided a valid App Id for your Facebook Application.') );
-	} else
-		$input['app_id'] = trim($input['app_id']);
+	/* - - - - - -
+		
+		App ID field
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function app_id_field() {
+		$options = get_option('ffg_options');
+		?>
+		<input type="text" name="ffg_options[app_id]" value="<?php echo esc_attr($options['app_id']); ?>" class="regular-text" id="ffg-app-id" autocomplete="off" />
+		<span class="description"><?php _e('Required for the plugin to work.') ?></span>
+		<?php
+	}
+	// End app_id_field()
 	
-	// Validate Secret
-	if ( !preg_match('/^[0-9a-z]{27,37}$/i', trim($input['secret'])) ) {
-		$input['secret'] = null;		
-		add_settings_error( 'ffg_secret', 'secret', __('You do not appear to have proivided a valid Secret for your Facebook Application.') );
-	} else
-		$input['secret'] = trim($input['secret']);
 	
-	// Misc Settigns
-	$input['num_entries'] = intval($input['num_entries']);
-	$input['restore_defaults'] = $input['restore_defaults'] ? 1 : 0;
+	/* - - - - - -
+		
+		Number of entries field
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function secret_field() {
+		$options = get_option('ffg_options');
+		?>
+		<input type="text" name="ffg_options[secret]" value="<?php echo esc_attr($options['secret']); ?>" class="regular-text" id="ffg-secret" autocomplete="off" />
+		<span class="description"><?php _e('Required for the plugin to work.') ?></span>
+		<?php
+	}
+	// End secret_field()
+
+
+	/* - - - - - -
+		
+		Number of entries field
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function verify_button() {
+		$options = get_option('ffg_options');
+		?>
+		<input type="button" name="ffg_verify" value="<?php _e('Verify App Credentials') ?>" class="button" id="ffg-verify" />
+		<span id="ffg_verify_d" class="description"></span>
+		<?php
+	}
+	// End verify_button()
 	
-	return $input;
+	
+	/* - - - - - -
+		
+		Number of entries field
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function default_feed_field() {
+		$options = get_option('ffg_options');
+		?>
+		<input type="text" name="ffg_options[default_feed]" value="<?php echo esc_attr($options['default_feed']); ?>" class="regular-text" /> 
+		<span class="description"><?php _e('The default feed grabbed by fb_feed().') ?></span>
+		<?php
+	}
+	// End default_feed_field()
+
+
+	/* - - - - - -
+		
+		Number of entries field
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function num_entries_field() {
+		$options = get_option('ffg_options');
+		?>
+		<input type="text" name="ffg_options[num_entries]" value="<?php echo esc_attr($options['num_entries']); ?>" class="regular-text" /> 
+		<span class="description"><?php _e('The default number of entries to display.<br /> If empty or set to 0, posts will not be limited.') ?></span>
+		<?php
+	}
+	// End num_entries_field()
+
+
+	/* - - - - - -
+		
+		Limit to posts from feed checkbox.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function limit_checkbox() {
+		$options = get_option('ffg_options');
+		$checked =  $options['limit'] ? ' checked="checked" ' : null;
+		?>
+		<fieldset>
+			<legend class="screen-reader-text"><span><?php _e('Limit to posts from feed.') ?></span></legend>
+			<label for="limit"><input <?php echo $checked; ?> type="checkbox" value="1" id="limit" name="ffg_options[limit]"> <?php _e("When checked the posts displayed will be limited to those posted by the page who's feed is being retrieved.") ?></label>
+		</fieldset>
+		<?php
+	}
+	// End limit_checkbox()
+
+
+	/* - - - - - -
+		
+		Use default style sheet checkbox. 
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function default_style_checkbox() {
+		$options = get_option('ffg_options');
+		$checked =  $options['default_style'] ? ' checked="checked" ' : null;
+		?>
+		<fieldset>
+			<legend class="screen-reader-text"><span><?php _e('Use the default style sheet.') ?></span></legend>
+			<label for="default_style"><input <?php echo $checked; ?> type="checkbox" value="1" id="default_style" name="ffg_options[default_style]"> <?php _e("When checked the styles provided with this plugin will be used.") ?></label>
+		</fieldset>
+		<?php
+	}
+	// End default_style_checkbox()
+	
+	
+	/* - - - - - -
+		
+		Delete options on deactivation checkbox.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function delete_options_checkbox() {
+		$options = get_option('ffg_options');
+		$checked =  $options['delete_options'] ? ' checked="checked" ' : null;
+		?>
+		<fieldset>
+			<legend class="screen-reader-text"><span><?php _e('Delete options on deactivation?') ?></span></legend>
+			<label for="delete_options"><input <?php echo $checked; ?> type="checkbox" value="1" id="delete_options" name="ffg_options[delete_options]"> <?php _e("When checked this plugin's settings will be deleted on deactivation.") ?></label>
+		</fieldset>
+		<?php
+	}
+	// End delete_options_checkbox()
+	
+	
+	/* - - - - - -
+
+		Used to verify App Id & Secret from our options page.
+
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function verif_app_cred() {
+
+		if ( !current_user_can('manage_options') ) {
+			echo __('You do not have sufficient permissions to access this page.');
+			die();
+		}
+
+		check_ajax_referer( 'ffg_verif_app_cred', 'secure' );
+
+		// Verify App ID
+		if ( !preg_match('/[0-9]{10,}/', trim($_POST['app_id'])) ) {
+			echo "e:1-";
+			_e(" Invalid App Id");
+			die();
+		} else
+			$result['app_id'] = trim($_POST['app_id']);
+
+		// Verify Secret
+		if ( !preg_match('/[0-9a-z]{27,37}/i', trim($_POST['secret'])) ) {
+			echo "e:2-";
+			_e("Invalid Secret");
+			die();
+		} else
+			$result['secret'] = trim($_POST['secret']);
+
+		// Try to make the connection
+		$facebook = new Facebook(array(
+			  'appId'  => $result['app_id'],
+			  'secret' => $result['secret']
+			));
+
+		// If it couldn't connect…
+		if ( !$facebook ) {
+			echo 'Invalid';
+			die();
+		}
+
+		// This call will always work since we are fetching public data.
+		$app = $facebook->api('/'. $result['app_id'] .'?date_format=U');
+
+		if ( $app ) {
+			echo 'Name: '. $app['name'];
+		} else {
+			echo 'Invalid';
+		}
+
+		die(); // this is required to return a proper result
+	}
+	// End verify_app_cred()
+	
+	function validate_options( $input ) {
+
+		if (!current_user_can('manage_options'))
+			wp_die( __('You do not have sufficient permissions to access this page.') );
+
+		// Validate App Id
+		if ( !preg_match('/^[0-9]{10,}$/', trim($input['app_id'])) ) {
+
+			$input['app_id'] = null;
+
+			// Tell wp of the error (wp 3+)
+			if ( function_exists('add_settings_error') )
+				add_settings_error( 'ffg_app_id', 'app-id', __('You do not appear to have proivided a valid App Id for your Facebook Application.') );
+
+		} else
+			$input['app_id'] = trim($input['app_id']);
+
+		// Validate Secret
+		if ( !preg_match('/^[0-9a-z]{27,37}$/i', trim($input['secret'])) ) {
+
+			$input['secret'] = null;		
+
+			// Tell wp of the error (wp 3+)
+			if ( function_exists('add_settings_error') )
+				add_settings_error( 'ffg_secret', 'secret', __('You do not appear to have proivided a valid Secret for your Facebook Application.') );
+
+		} else
+			$input['secret'] = trim($input['secret']);
+
+		// Misc Settigns
+		$input['default_feed'] = intval($input['default_feed']) !== 0 ? intval($input['default_feed']) : null;
+		$input['num_entries'] = intval($input['num_entries']);
+		$input['limit'] = ( isset($input['limit']) ) ? 1 : 0;
+		$input['default_style'] = ( isset($input['default_style']) ) ? 1 : 0;
+		$input['delete_options'] = ( isset($input['delete_options']) ) ? 1 : 0;
+
+		return $input;
+	}
+	// End validate_options()
+
 }
+
+// Hook stuff in.
+$ffg_admin = new ffg_admin();
+add_action('admin_menu', array(&$ffg_admin, 'add_menu'));
+add_action('wp_ajax_ffg_verif_app_cred', array(&$ffg_admin, 'verif_app_cred'));
+add_action('admin_init', array(&$ffg_admin, 'settings_api_init'));
+
 ?>

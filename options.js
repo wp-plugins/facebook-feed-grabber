@@ -31,19 +31,19 @@ jQuery(document).ready(function($) {
 		
 		// Make request.
 		jQuery.post(ajaxurl, data, function(response) {
-						
+
 			// if invalid 
-			if ( response.search('Fatal error') != '-1' ) {
+			if ( response.search('/Fatal error/') != '-1' ) {
 				
 				v_span
 					.empty()
 					.append(no +'Invalid App Id or Secret');
 				
-			} else if ( response.substring(1,8) == 'Invalid' ) {
+			} else if ( response.substring(0,3).search('^e:[0-9]$') == '0' ) {
 				
 				v_span
 					.empty()
-					.append(no + response);
+					.append(no + response.substring(4));
 				
 			// if valid
 			} else {
