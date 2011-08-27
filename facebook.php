@@ -283,9 +283,6 @@ function fb_feed( $id = null, $args = array()) {
 			// This call will always work since we are fetching public data.
 			$app = $facebook->api('/'. $id .'?date_format=U');
 
-			/*
-				LBTD : Add function argument and option to make this a link
-			*/
 			if ( $app ) {
 				$output .= "<p class='fb-page-name'><a href='". $app['name'] ."' alt='". $app['name'] ."'>". $app['name'] ."</a></p>\n";
 			}
