@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Lets you display a facebook feed from a public profile. Requires a facebook App Id andSecret key. Only works with profiles that have public content at this time. To adjust the default number of entries it displays then go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.5.1
+Version: 0.5.2
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
  *
@@ -64,7 +64,7 @@ class ffg_setup {
 			
 			// Misc Settings
 			"default_feed" => null,
-			"num_entries" => "3",
+			"num_entries" => 3,
 			"limit" => 1,
 			"style_sheet" => 'style_sheet.css',
 			"delete_options" => 0,
@@ -203,22 +203,40 @@ function format_date( $published, $format = 'feed', $unixTimestamp = true ) {
 
 /* - - - - - -
 	
-	Retrieves a public pages newsfeed
+	Retrieves a public page's news feed and by default echos it.
 	
-	$id	-required
-		| The id of the page whoms newsfeed to retrieve. 
-		| If if you don't wish to limit the posts you can use the nickname
-	$maxitems	-optional	default: null
-		| Number of entries to retrieve.
-		| If null it will revert to what's set in the options.
-	$limit 	-optional	default: true
-		| Whether to limit posts to ones posted by the page that's being retrieved.
-	
-	$echo	-optional	default: true
-		| If true then it will echo the results or return them other wise.
+	$feed_id	-optional default:null
+		| If you did not set a default page id then you must pass the id of the feed to the function.
+		| If no feed id is set in the options and isn't passed directly to the function the it will return false.
+		
+	$args	-optional	default: array()
+		| below are the possible arguments to change and the default values.
+		| array(
+			// Whether to echo or return the results.
+			'echo' => true,
+			
+			// The container to put the results in. If it's null no container will be used.
+			'container' => 'div',
+			
+			// The id of the container.
+			'container_id' => 'fb-feed',
+			
+			// The class or classes of the container.
+			'container_class' => 'fb-feed',
+			
+			// Whether to limit the display to posts posted by the page who's feed is being retrieved.
+			'limit' => $options['limit'],
+			
+			// The maximum number of items to display.
+			'maxitems' => $options['num_entries'],
+			
+			// Whether to show the page title before the feed.
+			'show_title' => true
+			)
+			
 	
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-function fb_feed( $id = null, $args = array()) {
+function fb_feed( $feed_id = null, $args = array()) {
 	global $facebook;
 	
 	if ( $facebook === false )
@@ -228,11 +246,11 @@ function fb_feed( $id = null, $args = array()) {
 	$options = get_option('ffg_options');
 	
 	// See if we're using the default feed id.
-	if ( $id == null )
-		$id = $options['default_feed'];
+	if ( $feed_id == null )
+		$feed_id = $options['default_feed'];
 	
 	// If we still don't have a feed id…
-	if ( $id == null )
+	if ( $feed_id == null )
 		return false;
 	
 	// Default parameters.
@@ -258,7 +276,7 @@ function fb_feed( $id = null, $args = array()) {
 	extract($args);
 	
 	// Get the feed
-	$content = $facebook->api('/'. $id .'/feed?date_format=U');
+	$content = $facebook->api('/'. $feed_id .'/feed?date_format=U');
 	
 	if( $content && count($content['data']) > 0 ){
 		
@@ -281,10 +299,10 @@ function fb_feed( $id = null, $args = array()) {
 		if ( $show_title == true ) {
 			
 			// This call will always work since we are fetching public data.
-			$app = $facebook->api('/'. $id .'?date_format=U');
+			$app = $facebook->api('/'. $feed_id .'?date_format=U');
 
 			if ( $app ) {
-				$output .= "<p class='fb-page-name'><a href='". $app['name'] ."' alt='". $app['name'] ."'>". $app['name'] ."</a></p>\n";
+				$output .= "<p class='fb-page-name'><a href='". $app['feed_id'] ."' alt='". $app['name'] ."'>". $app['name'] ."</a></p>\n";
 			}
 			
 		}
@@ -294,7 +312,7 @@ function fb_feed( $id = null, $args = array()) {
 			// If we're limiting it to posts posted by the retrieved page
 			if ( $limit == true ) {
 			
-				if ( $id != $item['from']['id'] )
+				if ( $feed_id != $item['from']['id'] )
 					continue;
 					
 			} else {

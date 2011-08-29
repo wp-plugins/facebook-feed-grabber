@@ -189,7 +189,7 @@ class ffg_admin {
 		$options = get_option('ffg_options');
 		?>
 		<input type="text" name="ffg_options[default_feed]" value="<?php echo esc_attr($options['default_feed']); ?>" class="regular-text" /> 
-		<span class="description"><?php _e('The default feed grabbed by fb_feed().') ?></span>
+		<span class="description"><?php _e('The id of the default feed to be grabbed by fb_feed().') ?></span>
 		<?php
 	}
 	// End default_feed_field()
