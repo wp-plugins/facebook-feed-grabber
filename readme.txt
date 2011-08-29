@@ -7,6 +7,7 @@ Tested up to: 3.2.1
 Stable tag: 0.5.2
  
 Display the feed of a public page or profile. Requires you create a Facebook Application
+
 == Description ==
 
 Retrieve the feed of a *public* Facebook page or profile using the Facebook Graph API and the Facebook PHP SDK. You will need to have or create a Facebook application to use this plugin. Facebook requires it to use their graph api.
@@ -14,14 +15,6 @@ Retrieve the feed of a *public* Facebook page or profile using the Facebook Grap
 At this time it only displays things marked by Facebook as a status, link or video.
 
 Basic usage to display a Facebook feed is to add `<?php fb_feed() ?>` to a template file. That will use the default feed and the other default arguments set on the Facebook Feed Grabber options page.
-
-== Installation ==
-
-1. Upload `facebook-feed-grabber/` to the `/wp-content/plugins/` directory.
-2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Go to the Facebook Feed Grabber options page and enter your Facebook App Id and Secret.
-4. Set your default page id. (optional).
-5. Place `<?php fb_feed( $feed_id (optional), $args (optional)  ); ?>` in your templates. If you did not set a default page id then you must pass the $feed_id to the function.
 
 The arguments for fb_feed are as follows.
 * $feed_id (optional) Default: NULL ~ The id of the Facebook page who's feed you want to display. When set to null it retrieves the feed id set on the options page. If no feed_id is set in the options and you didn't pass it as a parameter then fb_feed() returns FALSE.
@@ -35,6 +28,15 @@ The arguments that can be passed through $args are as follows.
 * 'limit' => $options['limit'] // boolean ~ Defaults to value of "Limit to Posts From Feed" on the plugins options page.
 * 'maxitems' => $options['num_entries'] // int|string ~ Defaults to value of "Number of Entries" on the options page.
 * 'show_title' => true // boolean ~ Whether to show the Facebook page title before the feed.
+
+
+== Installation ==
+
+1. Upload `facebook-feed-grabber/` to the `/wp-content/plugins/` directory.
+2. Activate the plugin through the 'Plugins' menu in WordPress.
+3. Go to the Facebook Feed Grabber options page and enter your Facebook App Id and Secret.
+4. Set your default page id. (optional).
+5. Place `<?php fb_feed( $feed_id (optional), $args (optional)  ); ?>` in your templates. If you did not set a default page id then you must pass the $feed_id to the function.
 
 == Frequently Asked Questions ==
 
