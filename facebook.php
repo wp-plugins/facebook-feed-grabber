@@ -52,7 +52,7 @@ class ffg_setup {
 	function activate() {
 		
 		// Current plugin version
-		$version = '0.5';
+		$version = '0.5.2';
 	
 		// Get stored plugin options
 		$options = get_option('ffg_options');
