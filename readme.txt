@@ -16,11 +16,13 @@ At this time it only displays things marked by Facebook as a status, link or vid
 
 Basic usage to display a Facebook feed is to add `<?php fb_feed() ?>` to a template file. That will use the default feed and the other default arguments set on the Facebook Feed Grabber options page.
 
-The arguments for fb_feed are as follows.
-* $feed_id (optional) Default: NULL ~ The id of the Facebook page who's feed you want to display. When set to null it retrieves the feed id set on the options page. If no feed_id is set in the options and you didn't pass it as a parameter then fb_feed() returns FALSE.
-* $args (optional) Default: NULL ~ An array of arguments.
+The arguments for fb_feed are as follows:
 
-The arguments that can be passed through $args are as follows.
+1. $feed_id (optional) Default: NULL ~ The id of the Facebook page who's feed you want to display. When set to null it retrieves the feed id set on the options page. If no feed_id is set in the options and you didn't pass it as a parameter then fb_feed() returns FALSE.
+2. $args (optional) Default: NULL ~ An array of arguments.
+
+The arguments that can be passed through $args are as follows:
+
 * 'echo' => true // boolean ~ Echos the results when true else it returns the results.
 * 'container' => 'div' // string ~ The element to wrap the feed items in. If NULL then no container is used.
 * 'container_id' => 'fb-feed' // string ~ The id of the container element.
@@ -46,8 +48,10 @@ First you will need a Facebook account, then you must register as a Facebook dev
 
 = How do I find the id to access my page or profile? =
 
-One way is to go to one of the photo albums from your Facebook page or profile and look at the URL. For example here is the profile pictures album for Rehema Ministries Facebook page.
-* [Wordpress](https://www.facebook.com/photo.php?fbid=101360063267784&set=a.101360059934451.1955.101359869934470&type=1&theater "Rehema Ministries dba/In Step Foundation, Kenya")
+One way is to go to one of the photo albums from your Facebook page or profile and look at the URL. For example here is the profile pictures album for the Rehema Ministries Facebook page.
+
+* [https://www.facebook.com/photo.php?fbid=101360063267784&set=a.101360059934451.1955.101359869934470&type=1&theater](https://www.facebook.com/photo.php?fbid=101360063267784&set=a.101360059934451.1955.101359869934470&type=1&theater "Rehema Ministries dba/In Step Foundation, Kenya")
+
 Notice in the 'set' variable of that link the last set of numbers after the last period. In this case those numbers are '101359869934470'. That should be the id of your page or profile.
 
 = Why isn't fb_feed() displaying anything? =
