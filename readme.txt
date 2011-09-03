@@ -16,12 +16,31 @@ At this time it only displays things marked by Facebook as a status, link or vid
 
 Basic usage to display a Facebook feed is to add `<?php fb_feed() ?>` to a template file. That will use the default feed and the other default arguments set on the Facebook Feed Grabber options page.
 
-The arguments for fb_feed are as follows:
+== Installation ==
 
-1. $feed_id (optional) Default: NULL ~ The id of the Facebook page who's feed you want to display. When set to null it retrieves the feed id set on the options page. If no feed_id is set in the options and you didn't pass it as a parameter then fb_feed() returns FALSE.
-2. $args (optional) Default: NULL ~ An array of arguments.
+1. Upload `facebook-feed-grabber/` to the `/wp-content/plugins/` directory.
+2. Activate the plugin through the 'Plugins' menu in WordPress.
+3. Go to the Facebook Feed Grabber options page and enter your Facebook App Id and Secret.
+4. Set your default page id. (optional).
+5. Place `<?php fb_feed( $feed_id (optional), $args (optional)  ); ?>` in your templates. If you did not set a default page id then you must pass the $feed_id to the function.
 
-The arguments that can be passed through $args are as follows:
+If you are going to show more that one feed you should use something like the following,
+`<?php
+// Call the class to make the initial connenction.
+$facebook = new ffg();
+// Display the first feed using all default settings
+$facebook->feed();
+// Display a second feed with the id 101359869934470. Also change the id of the container.
+// Using the a different container id means you can't use the more specefic second default stylesheet.
+$facebook->feed('101359869934470', array('container_id'=>'fb-feed-2'));
+?>`
+
+The arguments for fb_feed as well as the feed() function in the ffg class are as follows.
+
+* $feed_id (optional) Default: NULL ~ The id of the Facebook page who's feed you want to display. When set to null it retrieves the feed id set on the options page. If no feed_id is set in the options and you didn't pass it as a parameter then fb_feed() returns FALSE.
+* $args (optional) Default: NULL ~ An array of arguments.
+
+The arguments that can be passed through $args are as follows.
 
 * 'echo' => true // boolean ~ Echos the results when true else it returns the results.
 * 'container' => 'div' // string ~ The element to wrap the feed items in. If NULL then no container is used.
@@ -31,15 +50,6 @@ The arguments that can be passed through $args are as follows:
 * 'maxitems' => $options['num_entries'] // int|string ~ Defaults to value of "Number of Entries" on the options page.
 * 'show_title' => true // boolean ~ Whether to show the Facebook page title before the feed.
 
-
-== Installation ==
-
-1. Upload `facebook-feed-grabber/` to the `/wp-content/plugins/` directory.
-2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Go to the Facebook Feed Grabber options page and enter your Facebook App Id and Secret.
-4. Set your default page id. (optional).
-5. Place `<?php fb_feed( $feed_id (optional), $args (optional)  ); ?>` in your templates. If you did not set a default page id then you must pass the $feed_id to the function.
-
 == Frequently Asked Questions ==
 
 = How do I get a Facebook App Id & Secret? =
@@ -48,10 +58,8 @@ First you will need a Facebook account, then you must register as a Facebook dev
 
 = How do I find the id to access my page or profile? =
 
-One way is to go to one of the photo albums from your Facebook page or profile and look at the URL. For example here is the profile pictures album for the Rehema Ministries Facebook page.
-
-* [https://www.facebook.com/photo.php?fbid=101360063267784&set=a.101360059934451.1955.101359869934470&type=1&theater](https://www.facebook.com/photo.php?fbid=101360063267784&set=a.101360059934451.1955.101359869934470&type=1&theater "Rehema Ministries dba/In Step Foundation, Kenya")
-
+One way is to go to one of the photo albums from your Facebook page or profile and look at the URL. For example here is the profile pictures album for Rehema Ministries Facebook page.
+* [Wordpress](https://www.facebook.com/photo.php?fbid=101360063267784&set=a.101360059934451.1955.101359869934470&type=1&theater "Rehema Ministries dba/In Step Foundation, Kenya")
 Notice in the 'set' variable of that link the last set of numbers after the last period. In this case those numbers are '101359869934470'. That should be the id of your page or profile.
 
 = Why isn't fb_feed() displaying anything? =
@@ -67,6 +75,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 1. The options page.
 
 == Changelog ==
+
+= 0.6 =
+* Change the functions used to display a feed to be in the class 'ffg'. I will likely leave fb_feed() indefinitely for the bulk of people who are just displaying one feed. Feed back on this would be welcomed.
 
 = 0.5.2 =
 * Fixed bug. The page link displayed before the feed had an invalid link due to getting the page name instead of the page id.
