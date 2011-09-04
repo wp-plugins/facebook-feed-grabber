@@ -74,9 +74,9 @@ class ffg_setup {
 			);
 		
 		// If there aren't already settings defined then set the defaults.
-	    if( !is_array($options) ) {
+	    if( !is_array($this->options) ) {
 		
-			$options = $defaults;
+			$this->options = $defaults;
 		
 		// If the defined settings aren't for this version add any new settings.
 		} else if ( $options['version'] != $version) {
@@ -92,9 +92,9 @@ class ffg_setup {
 	// Delete ffg options if 'restore_defaults' is true
 	function deactivate(  ) {
 	
-		$opt = get_option('ffg_options');
+		$options = get_option('ffg_options');
 	
-		if ( $opt['delete_options'] )
+		if ( $options['delete_options'] )
 			delete_option('ffg_options');
 	
 	}
@@ -125,6 +125,10 @@ class ffg {
 	protected $appId = null;
 	protected $secret = null;
 	
+	// Plugin options set in wordpress
+	protected $options = false;
+	
+	// Our facebook connection gets stored here.
 	private $facebook = false;
 	
 	/* - - - - - -
@@ -134,15 +138,15 @@ class ffg {
 	- - - - - - - - - - - - - -3 - - - - - - - - - - - - - - - - - - */
 	function __construct( $appId = null, $secret = null ) {
 		
-		$options = get_option('ffg_options');
-
+		$this->options = get_option('ffg_options');
+		
 		// See if we're getting the default App Id.
 		if ( $appId == null )
-			$appId = $options['app_id'];
+			$appId = $this->options['app_id'];
 
 		// See if we're getting the default secret.
 		if ( $secret == null )
-			$secret = $options['secret'];
+			$secret = $this->options['secret'];
 
 		// See if we have an App Id.
 		if ( $appId == null)
@@ -223,7 +227,7 @@ class ffg {
 	
 		// Convert to our wp timezone
 		$published = $published + ( get_option( 'gmt_offset' ) * 3600 );
-	
+			
 		switch ( $format) {
 			case 'event':
 			
@@ -278,10 +282,10 @@ class ffg {
 				'container_class' => 'fb-feed',
 
 				// Whether to limit the display to posts posted by the page who's feed is being retrieved.
-				'limit' => $options['limit'],
+				'limit' => $this->options['limit'],
 
 				// The maximum number of items to display.
-				'maxitems' => $options['num_entries'],
+				'maxitems' => $this->options['num_entries'],
 
 				// Whether to show the page title before the feed.
 				'show_title' => true
@@ -294,32 +298,28 @@ class ffg {
 		if ( $this->facebook === false )
 			return false;
 
-		// Get the options.
-		$options = get_option('ffg_options');
-
 		// See if we're using the default feed id.
 		if ( $feed_id == null )
-			$feed_id = $options['default_feed'];
+			$feed_id = $this->options['default_feed'];
 
 		// If we still don't have a feed id…
 		if ( $feed_id == null )
 			return false;
 
-		// Default parameters.
+		// If args were provided in a query style string.
+		if ( is_string($args) )
+			parse_str($args, $args);
+		
+		// Default arguments
 		$defaults = array(
 			'echo' => true,
 			'container' => 'div',
 			'container_id' => 'fb-feed',
 			'container_class' => 'fb-feed',
-			'limit' => $options['limit'],
-			'maxitems' => $options['num_entries'],
-			'show_title' => true
+			'limit' => $this->options['limit'],
+			'maxitems' => $this->options['num_entries'],
+			'show_title' => true,
 		);
-
-		// If args were provided in a query style string.
-		if ( is_string($args) )
-			parse_str($args, $args);
-
 
 		// Overwrite defaults as neccissary.
 		$args = array_merge($defaults, $args);

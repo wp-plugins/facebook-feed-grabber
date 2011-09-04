@@ -77,7 +77,7 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 == Changelog ==
 
 = 0.6 =
-* Change the functions used to display a feed to be in the class 'ffg'. I will likely leave fb_feed() indefinitely for the bulk of people who are just displaying one feed. Feed back on this would be welcomed.
+* Changed the functions used to display a feed to be in the class 'ffg'. I will likely leave fb_feed() indefinitely for the bulk of people who are just displaying one feed. Feed back on this would be welcomed.
 
 = 0.5.2 =
 * Fixed bug. The page link displayed before the feed had an invalid link due to getting the page name instead of the page id.
