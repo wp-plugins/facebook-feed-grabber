@@ -339,10 +339,10 @@ class ffg {
 			$count = 0;
 
 			// Open the container element?
-			if ( $container != null ) {
+			if ( !empty($container) ) {
 
-				$container_id = ( $container_id != null ) ? " id='". $container_id ."'" : null;
-				$container_class = ( $container_class != null ) ? " class='". $container_class ."'" : null;
+				$container_id = ( !empty($container_id) ) ? " id='". $container_id ."'" : null;
+				$container_class = ( !empty($container_class) ) ? " class='". $container_class ."'" : null;
 				$output .= "<". $container . $container_id . $container_class .">\n";
 
 			}
@@ -354,7 +354,7 @@ class ffg {
 				$app = $this->facebook->api('/'. $feed_id .'?date_format=U');
 
 				if ( $app ) {
-					$output .= "<p class='fb-page-name'><a href='". $app['feed_id'] ."' alt='". $app['name'] ."'>". $app['name'] ."</a></p>\n";
+					$output .= "<p class='fb-page-name'><a href='". $app['link'] ."' alt='". $app['name'] ."'>". $app['name'] ."</a></p>\n";
 				}
 
 			}
@@ -544,8 +544,7 @@ class ffg {
 			return false;
 	}
 	// End fb_feed()
-	
-	
+		
 }
 
 
@@ -565,6 +564,26 @@ function fb_feed( $feed_id = null, $args = array() ) {
 	return $facebook;
 	
 }
+
+
+/* - - - - - -
+	
+	Add Shortcode tag.
+	
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+function fb_feed_shortcode( $args, $feed_id = null ) {
+	
+	$args['echo'] = false;
+	
+	$facebook = new ffg();
+	
+	$facebook = $facebook->feed($feed_id, $args);
+	
+	return $facebook;
+	
+}
+add_shortcode('fb_feed', 'fb_feed_shortcode');
+
 
 /* - - - - - -
 	

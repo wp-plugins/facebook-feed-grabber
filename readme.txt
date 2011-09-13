@@ -14,41 +14,54 @@ Retrieve the feed of a *public* Facebook page or profile using the Facebook Grap
 
 At this time it only displays things marked by Facebook as a status, link or video.
 
-Basic usage to display a Facebook feed is to add `<?php fb_feed() ?>` to a template file. That will use the default feed and the other default arguments set on the Facebook Feed Grabber options page.
+Basic usage to display a Facebook feed is to add `[fb_feed]` to a post or page, or add `<?php fb_feed() ?>` to a template file. That will use the default feed and the other default arguments set on the Facebook Feed Grabber options page.
 
 == Installation ==
 
 1. Upload `facebook-feed-grabber/` to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Go to the Facebook Feed Grabber options page and enter your Facebook App Id and Secret.
-4. Set your default page id. (optional).
-5. Place `<?php fb_feed( $feed_id (optional), $args (optional)  ); ?>` in your templates. If you did not set a default page id then you must pass the $feed_id to the function.
+4. Set your default page id.
+5. Place `[fb_feed]` in a post or page or add `<?php fb_feed(); ?>` to your templates. This will use the settings set on the options page.
 
-If you are going to show more that one feed you should use something like the following,
+If you wish to display a feed that isn't set on the options page then use `[fb_feed]101359869934470[/fb_feed]` in a post or page, or use `<?php fb_feed('101359869934470') ?>` in a template file.
+
+Arguments can be passed to fb_feed($feed_id, $args) as an array in $args or as key=value pairs in [fb_feed]. The following are the possible arguments and their default values.
+
+* **echo = true** - boolean ~ Echo the results when true else it returns the results. Only works for `fb_feed()`
+* **container = 'div'** - string ~ The element to wrap the feed items in. If NULL then no container is used.
+* **container_id => 'fb-feed'** - string ~ The id of the container element. Pass 0 or an empty string to it to not use a container.
+* **container_class => 'fb-feed'** - string ~ The class of the container element. Pass 0 or an empty string to it to not use a container.
+* **limit => $options['limit']** - boolean ~ Defaults to value of "Limit to Posts From Feed" on the plugins options page.
+* **maxitems => $options['num_entries']** - int|string ~ Defaults to value of "Number of Entries" on the options page.
+* **show_title => true** - boolean ~ Whether to show the Facebook page title before the feed. Pass 1 for true or 0 for false when using `[fb_feed]`.
+
+= Examples =
+
+To display the feed defined on the options page in a post or page without the page title use,
+`[fb_feed show_title=1]`
+
+To do the same in a template file use,
+`<?php fb_feed( null, array('show_title' => false) ); ?>`
+
+To display a feed not defined on the options page and not limiting the posts to those from the page being retrieved use this in your post or page,
+`[fb_feed container_id='facebook-feed']101359869934470[/fb_feed]`
+
+To do the same in a template file use,
+`<?php fb_feed( '101359869934470', array('container_id' => 'facebook-feed') ); ?>`
+
+If you are going to show more that one feed in a template file I suggest doing something like the following,
 `<?php
-// Call the class to make the initial connenction.
+// Call the class to make the initial connection.
 $facebook = new ffg();
+
 // Display the first feed using all default settings
 $facebook->feed();
-// Display a second feed with the id 101359869934470. Also change the id of the container.
-// Using the a different container id means you can't use the more specefic second default stylesheet.
+
+// Display a second feed with the id 101359869934470. You should also change the id of the container.
+// If you use a different container id you can't use the more specefic second default stylesheet.
 $facebook->feed('101359869934470', array('container_id'=>'fb-feed-2'));
 ?>`
-
-The arguments for fb_feed as well as the feed() function in the ffg class are as follows.
-
-* $feed_id (optional) Default: NULL ~ The id of the Facebook page who's feed you want to display. When set to null it retrieves the feed id set on the options page. If no feed_id is set in the options and you didn't pass it as a parameter then fb_feed() returns FALSE.
-* $args (optional) Default: NULL ~ An array of arguments.
-
-The arguments that can be passed through $args are as follows.
-
-* 'echo' => true // boolean ~ Echos the results when true else it returns the results.
-* 'container' => 'div' // string ~ The element to wrap the feed items in. If NULL then no container is used.
-* 'container_id' => 'fb-feed' // string ~ The id of the container element.
-* 'container_class' => 'fb-feed' // string ~ The class of the container element.
-* 'limit' => $options['limit'] // boolean ~ Defaults to value of "Limit to Posts From Feed" on the plugins options page.
-* 'maxitems' => $options['num_entries'] // int|string ~ Defaults to value of "Number of Entries" on the options page.
-* 'show_title' => true // boolean ~ Whether to show the Facebook page title before the feed.
 
 == Frequently Asked Questions ==
 
@@ -78,6 +91,7 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 = 0.6 =
 * Changed the functions used to display a feed to be in the class 'ffg'. I will likely leave fb_feed() indefinitely for the bulk of people who are just displaying one feed. Feed back on this would be welcomed.
+* Added [fb_feed] shortcode.
 
 = 0.5.2 =
 * Fixed bug. The page link displayed before the feed had an invalid link due to getting the page name instead of the page id.
