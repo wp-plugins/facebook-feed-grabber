@@ -1,6 +1,24 @@
 <?php
 
+/* - - - - - -
+	
+	Class containing everything for our options page.
+	
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 class ffg_admin {
+	
+	// Plugin options set in wordpress
+	protected $options = false;
+	
+	function __construct(  ) {
+		global $ffg_setup;
+		
+		if ( is_array($ffg_setup->defaults) )
+			$this->options = array_merge($ffg_setup->defaults, get_option('ffg_options'));
+		else
+			$this->options = get_option('ffg_options');
+	}
+	// End __construct()
 	
 	
 	/* - - - - - -
@@ -9,7 +27,7 @@ class ffg_admin {
 	
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function add_menu() {
-	
+		
 		$page = add_options_page('Facebook Feed Grabber Options', 'Facebook Feed Grabber', 'manage_options', __file__, array(&$this, 'options_page'));
 
 		add_action( "admin_print_scripts-". $page, array(&$this, 'javascript') );
@@ -33,14 +51,16 @@ class ffg_admin {
 		add_settings_field('ffg_secret', __('App Secret'), array(&$this, 'secret_field'), __FILE__, 'fb_app_info');
 		add_settings_field('ffg_verify', __('Verify App Id & Secret'), array(&$this, 'verify_button'), __FILE__, 'fb_app_info');
 
-		// Misc
+		// Misc Settings
 		add_settings_section('misc_settings', __('Misc Settings'), array(&$this, 'setting_section_callback_function'), __file__);
 		add_settings_field('ffg_default_feed', __('Default Feed'), array(&$this, 'default_feed_field'), __file__, 'misc_settings');
 		add_settings_field('ffg_num_entries', __('Number of Entries'), array(&$this, 'num_entries_field'), __file__, 'misc_settings');
+		add_settings_field('ffg_show_title', __('Show Title'), array(&$this, 'show_title_checkbox'), __FILE__, 'misc_settings');
 		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array(&$this, 'limit_checkbox'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_show_thumbnails', __('Show Thumbnails'), array(&$this, 'show_thumbnails_checkbox'), __FILE__, 'misc_settings' );
 		add_settings_field('ffg_style_sheet', __('Styles Sheet'), array(&$this, 'style_sheet_radio'), __FILE__, 'misc_settings');
 		add_settings_field('delete_options', __('Delete Options on Deactivation'), array(&$this, 'delete_options_checkbox'), __FILE__, 'misc_settings');
-		
+
 	}
 	// End settings_api_init()
 	
@@ -134,16 +154,15 @@ class ffg_admin {
 		<?php
 	}
 	
-	
+		
 	/* - - - - - -
 		
 		App ID field
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function app_id_field() {
-		$options = get_option('ffg_options');
 		?>
-		<input type="text" name="ffg_options[app_id]" value="<?php echo esc_attr($options['app_id']); ?>" class="regular-text" id="ffg-app-id" autocomplete="off" />
+		<input type="text" name="ffg_options[app_id]" value="<?php echo esc_attr($this->options['app_id']); ?>" class="regular-text" id="ffg-app-id" autocomplete="off" />
 		<span class="description"><?php _e('Required for the plugin to work.') ?></span>
 		<?php
 	}
@@ -156,9 +175,8 @@ class ffg_admin {
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function secret_field() {
-		$options = get_option('ffg_options');
 		?>
-		<input type="text" name="ffg_options[secret]" value="<?php echo esc_attr($options['secret']); ?>" class="regular-text" id="ffg-secret" autocomplete="off" />
+		<input type="text" name="ffg_options[secret]" value="<?php echo esc_attr($this->options['secret']); ?>" class="regular-text" id="ffg-secret" autocomplete="off" />
 		<span class="description"><?php _e('Required for the plugin to work.') ?></span>
 		<?php
 	}
@@ -171,7 +189,6 @@ class ffg_admin {
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function verify_button() {
-		$options = get_option('ffg_options');
 		?>
 		<input type="button" name="ffg_verify" value="<?php _e('Verify App Credentials') ?>" class="button" id="ffg-verify" />
 		<span id="ffg_verify_d" class="description"></span>
@@ -186,9 +203,8 @@ class ffg_admin {
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function default_feed_field() {
-		$options = get_option('ffg_options');
 		?>
-		<input type="text" name="ffg_options[default_feed]" value="<?php echo esc_attr($options['default_feed']); ?>" class="regular-text" /> 
+		<input type="text" name="ffg_options[default_feed]" value="<?php echo esc_attr($this->options['default_feed']); ?>" class="regular-text" /> 
 		<span class="description"><?php _e('The id of the default feed to be grabbed by fb_feed().') ?></span>
 		<?php
 	}
@@ -201,14 +217,30 @@ class ffg_admin {
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function num_entries_field() {
-		$options = get_option('ffg_options');
 		?>
-		<input type="text" name="ffg_options[num_entries]" value="<?php echo esc_attr($options['num_entries']); ?>" class="regular-text" /> 
+		<input type="text" name="ffg_options[num_entries]" value="<?php echo esc_attr($this->options['num_entries']); ?>" class="regular-text" /> 
 		<span class="description"><?php _e('The default number of entries to display.<br /> If empty or set to 0, posts will not be limited.') ?></span>
 		<?php
 	}
 	// End num_entries_field()
-
+	
+	
+	/* - - - - - -
+		
+		Show feed Title.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function show_title_checkbox() {
+		$checked =  $this->options['show_title'] ? ' checked="checked" ' : null;
+		?>
+		<fieldset>
+			<legend class="screen-reader-text"><span><?php _e("Show the feed title.") ?></span></legend>
+			<label for="show_title"><input <?php echo $checked; ?> type="checkbox" value="1" id="show_title" name="ffg_options[show_title]"> <?php _e("Show the feed title.") ?></label>
+		</fieldset>
+		<?php
+	}
+	// End show_title_checkbox()
+	
 
 	/* - - - - - -
 		
@@ -216,8 +248,7 @@ class ffg_admin {
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function limit_checkbox() {
-		$options = get_option('ffg_options');
-		$checked =  $options['limit'] ? ' checked="checked" ' : null;
+		$checked =  $this->options['limit'] ? ' checked="checked" ' : null;
 		?>
 		<fieldset>
 			<legend class="screen-reader-text"><span><?php _e('Limit to posts from feed.') ?></span></legend>
@@ -230,17 +261,33 @@ class ffg_admin {
 
 	/* - - - - - -
 		
+		Show thumbnails when available.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function show_thumbnails_checkbox() {
+		$checked =  $this->options['show_thumbnails'] ? ' checked="checked" ' : null;
+		?>
+		<fieldset>
+			<legend class="screen-reader-text"><span><?php _e("Show thumbnails for post if there is one.") ?></span></legend>
+			<label for="show_thumbnails"><input <?php echo $checked; ?> type="checkbox" value="1" id="show_thumbnails" name="ffg_options[show_thumbnails]"> <?php _e("Show thumbnails for post if there is one.") ?></label>
+		</fieldset>
+		<?php
+	}
+	// End show_thumbnails_checkbox()
+
+
+	/* - - - - - -
+		
 		Use default style sheet checkbox. 
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function style_sheet_radio() {
-		$options = get_option('ffg_options');
 		?>
 		<fieldset>
 			<legend class="screen-reader-text"><span>Date Format</span></legend>
-			<label title="F j, Y"><input type="radio"<?php echo ( !isset($options['style_sheet']) || $options['style_sheet'] == 'style.css' ) ? 'checked="checked"' : null; ?> value="style.css" name="ffg_options[style_sheet]"> <span>Use Default Style Sheet</span></label><br />
-			<label title="Y/m/d"><input type="radio"<?php echo (  $options['style_sheet'] == 'style-2.css' ) ? 'checked="checked"' : null; ?> value="style-2.css" name="ffg_options[style_sheet]"> <span>Use Secondary Style Sheet</span> <span class="description"><?php _e('More specific in it\'s declarations than the default. (Requires container to have an id of "fb-feed".)') ?></span></label><br />
-			<label title="m/d/Y"><input type="radio"<?php echo ( $options['style_sheet'] == false ) ? 'checked="checked"' : null; ?> value="0" name="ffg_options[style_sheet]"> <span>I'll Define My Own Styles.</span></label><br />
+			<label><input type="radio"<?php echo ( !isset($this->options['style_sheet']) || $this->options['style_sheet'] == 'style.css' ) ? 'checked="checked"' : null; ?> value="style.css" name="ffg_options[style_sheet]"> <span>Use Default Style Sheet</span></label><br />
+			<label><input type="radio"<?php echo (  $this->options['style_sheet'] == 'style-2.css' ) ? 'checked="checked"' : null; ?> value="style-2.css" name="ffg_options[style_sheet]"> <span>Use Secondary Style Sheet</span> <span class="description"><?php _e('More specific in it\'s declarations than the default. (Requires container to have an id of "fb-feed".)') ?></span></label><br />
+			<label><input type="radio"<?php echo ( $this->options['style_sheet'] == false ) ? 'checked="checked"' : null; ?> value="0" name="ffg_options[style_sheet]"> <span>I'll Define My Own Styles.</span></label><br />
 		</fieldset>
 		<?php
 	}
@@ -253,8 +300,7 @@ class ffg_admin {
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function delete_options_checkbox() {
-		$options = get_option('ffg_options');
-		$checked =  $options['delete_options'] ? ' checked="checked" ' : null;
+		$checked =  $this->options['delete_options'] ? ' checked="checked" ' : null;
 		?>
 		<fieldset>
 			<legend class="screen-reader-text"><span><?php _e('Delete options on deactivation?') ?></span></legend>
@@ -263,7 +309,7 @@ class ffg_admin {
 		<?php
 	}
 	// End delete_options_checkbox()
-	
+		
 	
 	/* - - - - - -
 
@@ -360,7 +406,9 @@ class ffg_admin {
 		// Misc Settigns
 		$input['default_feed'] = ctype_digit($input['default_feed']) !== false ? $input['default_feed'] : null;
 		$input['num_entries'] = intval($input['num_entries']);
+		$input['show_title'] = ( isset($input['show_title']) ) ? 1 : 0;
 		$input['limit'] = ( isset($input['limit']) ) ? 1 : 0;
+		$input['show_thumbnails'] = ( isset($input['show_thumbnails']) ) ? 1 : 0;
 		
 		if ( isset($input['style_sheet']) ) {
 			switch ( trim($input['style_sheet']) ) {
@@ -396,5 +444,4 @@ $ffg_admin = new ffg_admin();
 add_action('admin_menu', array(&$ffg_admin, 'add_menu'));
 add_action('wp_ajax_ffg_verif_app_cred', array(&$ffg_admin, 'verif_app_cred'));
 add_action('admin_init', array(&$ffg_admin, 'settings_api_init'));
-
 ?>

@@ -91,7 +91,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 = 0.6 =
 * Changed the functions used to display a feed to be in the class 'ffg'. I will likely leave fb_feed() indefinitely for the bulk of people who are just displaying one feed. Feed back on this would be welcomed.
+* Improved the handling of event dates.
 * Added [fb_feed] shortcode.
+* Added support for shared video links.
 
 = 0.5.2 =
 * Fixed bug. The page link displayed before the feed had an invalid link due to getting the page name instead of the page id.
@@ -123,6 +125,10 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Upgrade Notice ==
 
+= 0.6 =
+* Added support for shared video links.
+* Added [fb_feed] short code.
+
 = 0.5.2 =
 * Fixes bug in both 0.5 releases where the page link displayed before the feed had an invalid link due to getting the page name instead of the page id.
 
@@ -134,9 +140,11 @@ My apologies to those who jumped on 0.5 only to find see bug and upgrade again v
 = 0.5 =
 * Improved the output of statuses. When you upgrade please be sure to visit the options page and review/update it.
 
+== Known Issues ==
+* In some cases the time for a shared event displays in the users timezone but does not account for daylight savings time.
+
 == Next Version ==
 
 In no particular order,
+* Add 'show_thumbnails' option.
 * Improve the html output by adding support for shared photos and notes.
-* Change fb_feed() to be in class? (will leave an alias for fb_feed() for the next few versions when I do)
-* Add Shortcode access.

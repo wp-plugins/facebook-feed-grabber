@@ -36,54 +36,68 @@ Author URI: http://www.lucasbonner.com
  * **********************************************************************
  */
 
-// On activation or deactivation
-register_activation_hook(__FILE__, array('ffg_setup', 'activate'));
-register_deactivation_hook(__FILE__, array('ffg_setup', 'deactivate'));
 
 /* - - - - - -
 	
-	Class containing setup and deactivation stuff.
+	Class containing plugin setup and deactivation stuff.
 	
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 class ffg_setup {
 	
+
+	// Current plugin version
+	protected $version = '0.6';
+	
+	// For the defaults
+	public $defaults = false;
+	
+
+	/* - - - - - -
+		
+		Set the default settings.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function __construct(  ) {
+		
+		// The defaults
+		$this->defaults = array(
+			// Facebook App ID & Secret
+			'app_id' => null,
+			'secret' => null,
+		
+			// Misc Settings
+			'default_feed' => null,
+			'show_title' => 1,
+			'num_entries' => 3,
+			'limit' => 1,
+			'show_thumbnails' => 1,
+			'style_sheet' => 'style.css',
+			'delete_options' => 0,
+		
+			// Current Version
+			'version' => $this->version
+			);
+		
+	}
+	
 	// 
 	// Define default options
 	function activate() {
-		
-		// Current plugin version
-		$version = '0.5';
 	
 		// Get stored plugin options
 		$options = get_option('ffg_options');
-	
-		$defaults = array(
-			// Facebook App ID & Secret
-			"app_id" => null,
-			"secret" => null,
-			
-			// Misc Settings
-			"default_feed" => null,
-			"num_entries" => 3,
-			"limit" => 1,
-			"style_sheet" => 'style_sheet.css',
-			"delete_options" => 0,
-			
-			// Current Version
-			'version' => $version
-			);
-		
+				
 		// If there aren't already settings defined then set the defaults.
-	    if( !is_array($this->options) ) {
+	    if( !is_array($options) ) {
 		
-			$this->options = $defaults;
+			$options = $this->defaults;
 		
 		// If the defined settings aren't for this version add any new settings.
-		} else if ( $options['version'] != $version) {
-			$options = array_merge($defaults, $options);
+		} else if ( $options['version'] != $this->version) {
+			$options = array_merge($this->defaults, $options);
 		}
 		
-		$options['version'] = '0.5';
+		$options['version'] = $this->version;
 	
 		update_option('ffg_options', $options);
 	}
@@ -101,6 +115,12 @@ class ffg_setup {
 	
 }
 // End class ffg_setup
+
+// On activation or deactivation
+$ffg_setup = new ffg_setup();
+register_activation_hook(__FILE__, array(&$ffg_setup, 'activate'));
+register_deactivation_hook(__FILE__, array(&$ffg_setup, 'deactivate'));
+
 
 // The Facebook PHP SDK uses sessions. So start sessions now before anything is output.
 if ( !session_id() )
@@ -122,14 +142,40 @@ if ( is_admin() )
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 class ffg {
 	
+	/* - - - Beginning of settings - - - */
+	
+	// Required settings
+	
+	// Your app id
 	protected $appId = null;
+	
+	// You app secret.
 	protected $secret = null;
 	
-	// Plugin options set in wordpress
-	protected $options = false;
+	// Settings retrieved from the options page.
+	public $options = false;
+		
+	// Date formats for event times.
+	public $date_formats = array(
+		// For event dates
+		'event' => array(
+			'today' => '\T\o\d\a\y \a\t g:ia',
+			'this_year' => 'l, F jS \a\t g:ia',
+			'other_year' => 'l, F jS, Y \a\t g:ia',
+		),
+		// For the dates something was posted
+		'feed' => array(
+			'today' => '\T\o\d\a\y \a\t g:ia',
+			'this_year' => 'M jS g:ia',
+			'other_year' => 'M jS, Y g:ia',
+		),
+	);
+
+	/* - - - End of settings - - - */
 	
 	// Our facebook connection gets stored here.
 	private $facebook = false;
+	
 	
 	/* - - - - - -
 
@@ -200,26 +246,83 @@ class ffg {
 	
 	/* - - - - - -
 		
-		Format date/time.
-			- 'Today at g:ia' for a date/time from today.
-			- 'l, F dS \a\t g:ia' for something from this year.
-			- 'l, F dS, Y \a\t g:ia' for stuff not from this year.
+		Looks to see if $text is a date in one of the following formats,
+			-Tomorrow at 5:00pm
+			-Wednesday, August 24 at 5:00pm
+			-Wednesday, August 24, 2011 at 5:00pm
+			
+		Returns false if it is not a date, if is a date the it returns it in a string that strtotime() will recognize. 
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function format_date( $published, $format = 'feed', $unixTimestamp = true ) {
+	function is_date( $text ) {
+		
+		// Days for preg_match regular expression
+		$days = "(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)";
+		// Months for preg_match regular expression
+		$months = "(January|February|March|April|May|June|July|August|September|October|November|December)";
+		
+		// 	if ( preg_match([Tomorrow at time], $text) )
+		if ( preg_match("/^Tomorrow at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
+			$date = "Tomorrow {$date[1]}:{$date[2]}{$date[3]}";
+		
+		// if ( preg_match([day, month day at time], $text) )
+		elseif ( preg_match("/^$days, $months ([0-9]|[12][0-9]|3[01]) at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
+			$date = "{$date[2]} {$date[3]} {$date[4]}:{$date[5]}{$date[6]}";
+		
+		
+		// if ( preg_match([day, month day, year at time], $text) )
+		elseif ( preg_match("/^$days, $months ([0-9]|[12][0-9]|3[01]), (20[0-9][0-9]) at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
+			$date = "{$date[2]} {$date[3]}, {$date[4]} {$date[5]}:{$date[6]}{$date[7]}";
+		
+		else
+			return false;
+		
+		return $date;
+		
+	}
+	// End is_date()
+	
+	
+	/* - - - - - -
+		
+		$published = The time to format
+		$format = Defaults to feed which means it'll expect a unix timestamp in the first parameter $published. If set to 'event' it will assume we were fed a string that strtotime() will interpret.
+		
+		Uses the date formats defined in $this->date_formats[$format] for the output.
+		
+		Returns false on failure of formated string on success.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function format_date( $published, $format = 'feed' ) {
 		global $wp_local;
 	
-		// If we weren't given a unix timestamp make it one.
-		if ( $unixTimestamp == false )
-			$timestamp = strtotime($published);
-		else
-			$timestamp = true;
-	
-		// If we couln't make a unix timestamp
-		if ( $timestamp === false )
-			return $published;
-		elseif ( $timestamp !== true )
-			$published = $timestamp;
+		switch ( $format ) {
+			
+			case 'event':// {
+				
+				$timestamp = strtotime($published);
+
+				// If we couln't make a unix timestamp
+				if ( $timestamp === false )
+					return false;
+				else
+					$published = $timestamp;
+				
+				// Get the date formats
+				$date_formats = $this->date_formats['event'];
+
+				break;
+			// }
+				
+			case 'feed':
+			default:
+			
+				// Get the date formats
+				$date_formats = $this->date_formats['feed'];
+
+				break;
+				
+		}
 		
 		/*
 			LBTD : Make timezone based on if user is logged into facebook and use that timezone?
@@ -227,31 +330,15 @@ class ffg {
 	
 		// Convert to our wp timezone
 		$published = $published + ( get_option( 'gmt_offset' ) * 3600 );
-			
-		switch ( $format) {
-			case 'event':
-			
-				if ( date_i18n('Ymd', $published) == date_i18n('Ymd') )
-					$published = "Today at ". date_i18n( 'g:ia', $published );
-				else if ( date_i18n('Y', $published) == date_i18n('Y') )
-					$published = date_i18n( 'l, F dS \a\t g:ia', $published );
-				else
-					$published = date_i18n( 'l, F dS, Y \a\t g:ia', $published );
-			
-				break;
 		
-			case 'feed':
-			default:
+		if ( date_i18n('Ymd', $published) == date_i18n('Ymd') )
+			$published = date_i18n( $date_formats['today'], $published );
 			
-				if ( date_i18n('Ymd', $published) == date_i18n('Ymd') )
-					$published = date_i18n( 'g:ia', $published );
-				else if ( date_i18n('Y', $published) == date_i18n('Y') )
-					$published = date_i18n( 'M dS g:ia', $published );
-				else
-					$published = date_i18n( 'M dS, Y g:ia', $published );
+		else if ( date_i18n('Y', $published) == date_i18n('Y') )
+			$published = date_i18n( $date_formats['this_year'], $published );
 			
-				break;
-		}
+		else
+			$published = date_i18n( $date_formats['other_year'], $published );
 		
 		return $published;
 	}
@@ -292,7 +379,7 @@ class ffg {
 				)
 
 
-		- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function feed( $feed_id = null, $args = array()) {
 
 		if ( $this->facebook === false )
@@ -317,20 +404,17 @@ class ffg {
 			'container_id' => 'fb-feed',
 			'container_class' => 'fb-feed',
 			'limit' => $this->options['limit'],
+			'show_thumbnails' => $this->options['show_thumbnails'],
 			'maxitems' => $this->options['num_entries'],
-			'show_title' => true,
 		);
 
-		// Overwrite defaults as neccissary.
-		$args = array_merge($defaults, $args);
-
-		// Exract our arguments.
-		extract($args);
+		// Overwrite the defaults and exract our arguments.
+		extract( array_merge($defaults, $args) );
 
 		// Get the feed
 		$content = $this->facebook->api('/'. $feed_id .'/feed?date_format=U');
 
-		if( $content && count($content['data']) > 0 ){
+		if ( $content && count($content['data']) > 0 ) {
 
 			// Output string
 			$output = "";
@@ -347,7 +431,7 @@ class ffg {
 
 			}
 
-			// Get the page title ?
+			// Get the page title
 			if ( $show_title == true ) {
 
 				// This call will always work since we are fetching public data.
@@ -383,31 +467,35 @@ class ffg {
 
 				// Get the description of item or the message of the one who posted the item
 				$descript = isset($item['description']) ? trim($item['description']) : null;
-				$descript = preg_replace('/\n/', '<br />', $descript);
-
+				// Turn urls into links and replace new lines with <br />
+				$descript = preg_replace(array('/(http[s]?):\/\/([^\s]+)/', '/\n/'), array("<a href='$1://$2'>\\2</a>", '<br />'), $descript);
+				
+				
 				// If it's an event…
 				if ( isset($item['properties']) ) {
 
 					$properties = null;
-
+					
 					foreach( $item['properties'] as $key => $property ) {
-
-						// If it's a date we want to change the timezone.
-						// First lets remove the things strtotime doesn't like
-						$find = array(',','Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'at ');
-						$date = str_replace($find, '', $property['text']);
-						$date = strtotime(trim($date));
-
-						if ( $date != false )
+						
+						$date = $this->is_date($property['text']);
+						
+						if ( $date != false ) {
+							
 							$date = $this->format_date($date, 'event');
 
-						$properties .= ( !$date ) ? $property['text'] : $date;
+							$properties .= ( $date != false ) ? $date : $property['text'];
+							
+						} else
+							$properties .= $property['text'];
 
-						// If there's another line of text
-						if ( $key != (count($item['properties']) - 1) )
-							$properties .= "<br />";
-					}
-
+							// If there's another line of text
+							if ( $key != (count($item['properties']) - 1) )
+								$properties .= "<br />";
+												
+					}// End foreach( $item['properties'] as $key => $property )
+				
+				// End if ( isset($item['properties']) )
 				} else
 					$properties = null;
 
@@ -427,7 +515,7 @@ class ffg {
 
 				// Item opening tag
 				$item_start = "<div class='fb-feed-item fb-item-". $count ."' id='fb-feed-". $item['id'] ."'>\n";
-
+				
 				// The published date
 				$date = "<p class='fb-date'>";
 					$date .= "<a href='". $item_link ."' target='_blank' class='quiet' title='". __('See this post on Facebook') ."'>". $published . $comments ."</a>";
@@ -437,7 +525,7 @@ class ffg {
 				$item_end = "</div>\n";
 
 				switch ( $item['type'] ) {
-					case 'link':
+					case 'link':// {
 
 							$output .= $item_start;
 
@@ -445,33 +533,36 @@ class ffg {
 								$output .= $from;
 
 							if ( $message != null  )
-								$output .= "<p class='message'>". $message ."</p>";
+								$output .= "<p class='message'>". $message ."</p>\n";
 
-							$output .= "<blockquote><p>";
+							$output .= "<blockquote>\n<p>\n";
 
-								$output .= "<a href='". esc_attr($item['link']) ."'>". $item['name'] ."</a>\n";
-
-
-								if ( $descript != null )
-									$output .= "<span class='descript'>". $descript ."</span>\n";
-
+								$output .= "<a href='". esc_attr($item['link']) ."' class='the_link'>". $item['name'] ."</a>\n";
+								
+								/*
+									LBTD : If $descript is an event date it shows in the correct time by default but it does not account for daylight savings time… Fix this?
+								*/
+								
+								$output .= "<span class='descript'>". $descript ."</span>\n";
+								
 								if ( $descript != null && $properties != null )
 									$output .= "<br /><br />";
 
 								if ( $properties != null )
 									$output .= $properties;
 
-							$output .= "</p></blockquote>\n";
+							$output .= "</p>\n</blockquote>\n";
 
 							$output .= $date;
 
 							$output .= $item_end;
 
 						break;
+					// }
+					
+					case 'status':// {
 
-					case 'status':
-
-						if ( $message == null && $descript == null )
+						if ( $message == null )
 							continue 2;
 
 						$output .= $item_start;
@@ -486,31 +577,33 @@ class ffg {
 						$output .= $item_end;
 
 						break;
+					// }
 
-					case 'video':
-
-					$output .= $item_start;
-
-					if ( $limit == false )
-						$output .= $from;
-
-					if ( $message != null  )
-						$output .= "<p class='message'>". $message ."</p>";
-
-					$output .= "<blockquote><p>";
-
-						$output .= "<a href='". esc_attr($item['source']) ."'>". $item['name'] ."</a>\n";
-
-						if ( $descript != null )
-							$output .= "<span class='descript'>". $descript ."</span>\n";
-
-					$output .= "</p></blockquote>\n";
-
-					$output .= $date;
-
-					$output .= $item_end;
-
+					case 'video':// {
+						
+						$output .= $item_start;
+						
+						if ( $limit == false )
+							$output .= $from;
+						
+						if ( $message != null  )
+							$output .= "<p class='message'>". $message ."</p>\n";
+						
+						$output .= "<blockquote>\n<p>\n";
+						
+							$output .= "<a href='". esc_attr($item['source']) ."' class='the_link'>". $item['name'] ."</a>\n";
+							
+							if ( $descript != null )
+								$output .= "<span class='descript'>". $descript ."</span>\n";
+							
+						$output .= "</p>\n</blockquote>\n";
+						
+						$output .= $date;
+						
+						$output .= $item_end;
+						
 						break;
+					// }
 
 					default:
 						continue 2;
@@ -550,10 +643,10 @@ class ffg {
 
 /* - - - - - -
 	
-	fb_feed() - Deprecated
-	
-	Here for backwards compatibility. Will be removed in a few versions.
-	
+	Used to display a feed without you haveing to mess with the class.
+	If you're displaying more than one feed I suggest using the class 
+	and not this function.
+		
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 function fb_feed( $feed_id = null, $args = array() ) {
 	
