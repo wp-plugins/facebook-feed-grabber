@@ -57,7 +57,7 @@ class ffg_admin {
 		add_settings_field('ffg_num_entries', __('Number of Entries'), array(&$this, 'num_entries_field'), __file__, 'misc_settings');
 		add_settings_field('ffg_show_title', __('Show Title'), array(&$this, 'show_title_checkbox'), __FILE__, 'misc_settings');
 		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array(&$this, 'limit_checkbox'), __FILE__, 'misc_settings');
-		add_settings_field('ffg_show_thumbnails', __('Show Thumbnails'), array(&$this, 'show_thumbnails_checkbox'), __FILE__, 'misc_settings' );
+		// add_settings_field('ffg_show_thumbnails', __('Show Thumbnails'), array(&$this, 'show_thumbnails_checkbox'), __FILE__, 'misc_settings' );
 		add_settings_field('ffg_style_sheet', __('Styles Sheet'), array(&$this, 'style_sheet_radio'), __FILE__, 'misc_settings');
 		add_settings_field('delete_options', __('Delete Options on Deactivation'), array(&$this, 'delete_options_checkbox'), __FILE__, 'misc_settings');
 
