@@ -1,6 +1,6 @@
 === Facebook Feed Grabber ===
 Contributors: bonnerl
-Donate link: 
+Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
 Requires at least: 2.8
 Tested up to: 3.2.1
@@ -11,8 +11,6 @@ Display the feed of a public page or profile. Requires you create a Facebook App
 == Description ==
 
 Retrieve the feed of a *public* Facebook page or profile using the Facebook Graph API and the Facebook PHP SDK. You will need to have or create a Facebook application to use this plugin. Facebook requires it to use their graph api.
-
-At this time it only displays things marked by Facebook as a status, link or video.
 
 Basic usage to display a Facebook feed is to add `[fb_feed]` to a post or page, or add `<?php fb_feed() ?>` to a template file. That will use the default feed and the other default arguments set on the Facebook Feed Grabber options page.
 
@@ -146,5 +144,4 @@ My apologies to those who jumped on 0.5 only to find see bug and upgrade again v
 == Next Version ==
 
 In no particular order,
-* Add 'show_thumbnails' option.
-* Improve the html output by adding support for shared photos and notes.
+* Add 'show_thumbnails' option/ability.

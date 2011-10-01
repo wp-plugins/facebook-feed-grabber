@@ -248,6 +248,7 @@ class ffg {
 		
 		Looks to see if $text is a date in one of the following formats,
 			-Tomorrow at 5:00pm
+			-Wednesday at 5:00pm
 			-Wednesday, August 24 at 5:00pm
 			-Wednesday, August 24, 2011 at 5:00pm
 			
@@ -265,6 +266,10 @@ class ffg {
 		if ( preg_match("/^Tomorrow at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
 			$date = "Tomorrow {$date[1]}:{$date[2]}{$date[3]}";
 		
+		// if ( preg_match([day at time], $text) )
+		elseif ( preg_match("/^$days at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
+			$date = "{$date[1]} {$date[2]}:{$date[3]}{$date[4]}";
+
 		// if ( preg_match([day, month day at time], $text) )
 		elseif ( preg_match("/^$days, $months ([0-9]|[12][0-9]|3[01]) at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
 			$date = "{$date[2]} {$date[3]} {$date[4]}:{$date[5]}{$date[6]}";
