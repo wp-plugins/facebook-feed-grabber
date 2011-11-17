@@ -154,4 +154,4 @@ My apologies to those who jumped on 0.5 only to find see bug and upgrade again v
 == Next Version ==
 
 In no particular order,
-* Add 'show_thumbnails' option/ability.
+* Add oEmbed support maybe?
