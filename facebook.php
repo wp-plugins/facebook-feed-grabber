@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Lets you display a facebook feed from a public profile. Requires a facebook App Id andSecret key. Only works with profiles that have public content at this time. To adjust the default number of entries it displays then go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.6
+Version: 0.7
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
  *
@@ -46,9 +46,9 @@ class ffg_setup {
 	
 
 	// Current plugin version
-	protected $version = '0.6';
+	protected $version = '0.7';
 	
-	// For the defaults
+	// For the defaults. (Look in $this->__construct())
 	public $defaults = false;
 	
 
@@ -76,7 +76,7 @@ class ffg_setup {
 		
 			// Current Version
 			'version' => $this->version
-			);
+		);
 		
 	}
 	
@@ -409,6 +409,7 @@ class ffg {
 			'container_id' => 'fb-feed',
 			'container_class' => 'fb-feed',
 			'limit' => $this->options['limit'],
+			'show_title' => $this->options['show_title'],
 			'show_thumbnails' => $this->options['show_thumbnails'],
 			'maxitems' => $this->options['num_entries'],
 		);
@@ -449,7 +450,10 @@ class ffg {
 			}
 
 			foreach($content['data'] as $item) {
-
+				
+				if ( empty($item) )
+					continue;
+								
 				// If we're limiting it to posts posted by the retrieved page
 				if ( $limit == true ) {
 
@@ -473,8 +477,11 @@ class ffg {
 				// Get the description of item or the message of the one who posted the item
 				$descript = isset($item['description']) ? trim($item['description']) : null;
 				// Turn urls into links and replace new lines with <br />
-				$descript = preg_replace(array('/(http[s]?):\/\/([^\s]+)/', '/\n/'), array("<a href='$1://$2'>\\2</a>", '<br />'), $descript);
+				$descript = preg_replace(array('/((?:http[s]?:\/\/)|www\.)([^\s]+)/', '/\n/'), array("<a href='$1$2'>\\2</a>", '<br />'), $descript);
 				
+				// Get the description of item or the message of the one who posted the item
+				$story = isset($item['story']) ? trim($item['story']) : null;
+				$story = preg_replace('/\n/', '<br />', $story);
 				
 				// If it's an event…
 				if ( isset($item['properties']) ) {
@@ -508,7 +515,7 @@ class ffg {
 				$published = $this->format_date($item['created_time']);
 
 				// Check for comments
-				if ( isset($item['comments']) ) {
+				if ( $item['comments']['count'] > 0 ) {
 					$comments = ( $item['comments']->count > 1 ) ? __(' Comments') : __(' Comment');
 					$comments = ' &bull; '. $item['comments']->count . $comments;
 				} else
@@ -518,102 +525,78 @@ class ffg {
 				$item_link = preg_split('/_/', $item['id']);
 				$item_link = 'http://www.facebook.com/'. $item_link[0] .'/posts/'. $item_link[1];
 
-				// Item opening tag
-				$item_start = "<div class='fb-feed-item fb-item-". $count ."' id='fb-feed-". $item['id'] ."'>\n";
+				/*
+					LBTD : If $descript is an event date it shows in the correct time by default but it does not account for daylight savings time? Fix this?
+				*/
 				
 				// The published date
 				$date = "<p class='fb-date'>";
 					$date .= "<a href='". $item_link ."' target='_blank' class='quiet' title='". __('See this post on Facebook') ."'>". $published . $comments ."</a>";
 				$date .= "</p>\n";
-
-				// Item closing tag
-				$item_end = "</div>\n";
-
-				switch ( $item['type'] ) {
-					case 'link':// {
-
-							$output .= $item_start;
-
-							if ( $limit == false )
-								$output .= $from;
-
-							if ( $message != null  )
-								$output .= "<p class='message'>". $message ."</p>\n";
-
-							$output .= "<blockquote>\n<p>\n";
-
-								$output .= "<a href='". esc_attr($item['link']) ."' class='the_link'>". $item['name'] ."</a>\n";
-								
-								/*
-									LBTD : If $descript is an event date it shows in the correct time by default but it does not account for daylight savings time… Fix this?
-								*/
-								
-								$output .= "<span class='descript'>". $descript ."</span>\n";
-								
-								if ( $descript != null && $properties != null )
-									$output .= "<br /><br />";
-
-								if ( $properties != null )
-									$output .= $properties;
-
-							$output .= "</p>\n</blockquote>\n";
-
-							$output .= $date;
-
-							$output .= $item_end;
-
-						break;
-					// }
+				
+				// 
+				// finish pieceing together the output.
+				// 
+				
+				// Item opening tag
+				$output .= "<div class='fb-feed-item fb-item-". $count ."' id='fb-feed-". $item['id'] ."'>\n";				
 					
-					case 'status':// {
-
-						if ( $message == null )
-							continue 2;
-
-						$output .= $item_start;
-
-							if ( $limit == false )
-								$output .= $from;
-
-							$output .= "<p class='descript'>". $message ."</p>\n";
-
-							$output .= $date;
-
-						$output .= $item_end;
-
-						break;
-					// }
-
-					case 'video':// {
+					// See if we should display who posted it
+					if ( $limit == false )
+						$output .= $from;
+					
+					// The actual users status
+					if ( $message != null  )
+						$output .= "<p class='message'>". $message ."</p>\n";
+					else if ( $story != null )
+						$output .= "<p class='story'>". $story ."</p>\n";
+					
+					// See if there's something like a link or video to show.
+					if ( isset($item['link']) || $descript != null || $properties != null ) {
 						
-						$output .= $item_start;
+						$output .= "<blockquote>\n";
 						
-						if ( $limit == false )
-							$output .= $from;
-						
-						if ( $message != null  )
-							$output .= "<p class='message'>". $message ."</p>\n";
-						
-						$output .= "<blockquote>\n<p>\n";
-						
-							$output .= "<a href='". esc_attr($item['source']) ."' class='the_link'>". $item['name'] ."</a>\n";
+							$output .= "<p>\n";
+							
+								if ( $show_thumbnails != false && isset($item['picture']) )
+									$output .= "<img src='". htmlentities($item['picture']) ."' class='thumbnail alignleft' />\n";
+								
+								// The item link
+								if ( isset($item['link']) )
+									$output .= "<a href='". esc_attr($item['link']) ."' class='the_link'>". $item['name'] ."</a>\n";
+								
+							$output .= "</p>\n";
+								
+							// The item caption
+							if ( isset($item['caption']) && preg_match('/((?:http[s]?:\/\/)|www\.)([^\s]+)/', $item['caption']) )
+								$output .= "<p class='caption'><a href='". esc_attr($item['caption']) ."'>". $item['caption'] ."</a><p>\n";
+							else if ( isset($item['caption']) )
+								$output .= "<p class='caption'>". $item['caption'] ."</p>\n";
+							
+							$output .= "<p>\n";
+							
+							// The item source
+							// LBTD: Do something with this?
+							// if ( isset($item['source']) )
+								// $output .= "<a href='". esc_attr($item['source']) ."' class='source'>". $item['name'] ."</a>\n";
 							
 							if ( $descript != null )
 								$output .= "<span class='descript'>". $descript ."</span>\n";
-							
+						
+							if ( $descript != null && $properties != null )
+								$output .= "<br /><br />";
+
+							if ( $properties != null )
+								$output .= $properties;
+
 						$output .= "</p>\n</blockquote>\n";
 						
-						$output .= $date;
-						
-						$output .= $item_end;
-						
-						break;
-					// }
+					}
 
-					default:
-						continue 2;
-				}
-
+					$output .= $date;
+				
+				$output .= "</div>\n";
+				
 				// Add one to our count tally
 				$count++;
 

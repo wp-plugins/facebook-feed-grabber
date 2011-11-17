@@ -5,7 +5,7 @@ Tags: Facebook, Social Networking
 Requires at least: 2.8
 Tested up to: 3.2.1
 Stable tag: 0.6
- 
+
 Display the feed of a public page or profile. Requires you create a Facebook Application
 
 == Description ==
@@ -87,6 +87,11 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Changelog ==
 
+= 0.7 =
+* Added thumbnail support for links, videos and photo albums.
+* Removed the status, link and video post types restriction.
+* Updated how it checks to see if there are comments.
+
 = 0.6 =
 * Changed the functions used to display a feed to be in the class 'ffg'. I will likely leave fb_feed() indefinitely for the bulk of people who are just displaying one feed. Feed back on this would be welcomed.
 * Improved the handling of event dates.
@@ -122,6 +127,11 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Has an options page and `fb_feed($feed_id)` function. 
 
 == Upgrade Notice ==
+
+= 0.7 =
+* Added thumbnail support for links, videos and photo albums.
+* Removed the status, link and video post types restriction.
+* Updated how it checks to see if there are comments.
 
 = 0.6 =
 * Added support for shared video links.
