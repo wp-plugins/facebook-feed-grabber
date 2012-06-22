@@ -59,6 +59,7 @@ class ffg_setup {
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function __construct(  ) {
 		
+				
 		// The defaults
 		$this->defaults = array(
 			// Facebook App ID & Secret
@@ -68,6 +69,8 @@ class ffg_setup {
 			// Misc Settings
 			'default_feed' => null,
 			'show_title' => 1,
+			'cache_feed' => 5,
+			'cache_folder' => WP_CONTENT_DIR. '/uploads/cache/',
 			'num_entries' => 3,
 			'limit' => 1,
 			'show_thumbnails' => 1,
@@ -77,6 +80,14 @@ class ffg_setup {
 			// Current Version
 			'version' => $this->version
 		);
+		
+		if ( ! wp_mkdir_p($this->defaults['cache_folder']) ) {
+			$this->defaults['cache_feed'] = 0;
+			
+			// Tell wp of the error (wp 3+)
+			if ( function_exists('add_settings_error') )
+				add_settings_error( 'ffg_cache_folder', 'cache-folder', __('We were unable to create directory '. $this->defaults['cache_folder'] .' which would be used for caching the feed to reduce page load time. Check to see if it\'s parent directory writable by the server?') );
+		}
 		
 	}
 	
@@ -128,7 +139,8 @@ if ( !session_id() )
 
 // 
 // Get the facebook sdk
-require_once 'facebook-sdk/facebook.php';
+if ( ! class_exists('Facebook') )
+	require_once 'facebook-sdk/facebook.php';
 
 // 
 // Get the options page stuff if in the admin area.
@@ -174,7 +186,7 @@ class ffg {
 	/* - - - End of settings - - - */
 	
 	// Our facebook connection gets stored here.
-	private $facebook = false;
+	public $facebook = false;
 	
 	
 	/* - - - - - -
@@ -217,7 +229,7 @@ class ffg {
 	
 	/* - - - - - -
 		
-		Authenticat App Id and Secret and make initial connection.
+		Authenticate App Id and Secret and make initial connection.
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function authenticate(  ) {
@@ -361,27 +373,35 @@ class ffg {
 		$args	-optional	default: array()
 			| below are the possible arguments to change and the default values.
 			| array(
-				// Whether to echo or return the results.
-				'echo' => true,
+				
+				~ Cache duration in minutes. To disable set as 0.
+				  'cache_feed' => $this->options['cache_feed'],
+				
+				~ The container to put the results in. If it's null no container will be used.
+				  'container' => 'div',
 
-				// The container to put the results in. If it's null no container will be used.
-				'container' => 'div',
+				~ The class or classes of the container.
+				  'container_class' => 'fb-feed',
 
-				// The id of the container.
-				'container_id' => 'fb-feed',
+				~ The id of the container.
+				  'container_id' => 'fb-feed',
 
-				// The class or classes of the container.
-				'container_class' => 'fb-feed',
+				~ Whether to echo or return the results.
+				  'echo' => true,
+				
+				~ Whether to limit the display to posts posted by the page who's feed is being retrieved.
+				  'limit' => $this->options['limit'],
 
-				// Whether to limit the display to posts posted by the page who's feed is being retrieved.
-				'limit' => $this->options['limit'],
+				~ Whether to show the page title before the feed.
+				  'show_title' => true
+				
+				~ Display thumbnails. (TRUE or FALSE)
+				  'show_thumbnails' => $this->options['show_thumbnails'],
 
-				// The maximum number of items to display.
-				'maxitems' => $this->options['num_entries'],
-
-				// Whether to show the page title before the feed.
-				'show_title' => true
-				)
+				~ The maximum number of items to display.
+				  'maxitems' => $this->options['num_entries'],
+				
+			),
 
 
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -404,10 +424,11 @@ class ffg {
 		
 		// Default arguments
 		$defaults = array(
-			'echo' => true,
+			'cache_feed' => $this->options['cache_feed'],
 			'container' => 'div',
-			'container_id' => 'fb-feed',
 			'container_class' => 'fb-feed',
+			'container_id' => 'fb-feed',
+			'echo' => true,
 			'limit' => $this->options['limit'],
 			'show_title' => $this->options['show_title'],
 			'show_thumbnails' => $this->options['show_thumbnails'],
@@ -416,10 +437,22 @@ class ffg {
 
 		// Overwrite the defaults and exract our arguments.
 		extract( array_merge($defaults, $args) );
+		
+		// Get the feed (maybe it's cached?)
+		if ( $cache_feed != 0 ) {
+			
+			// Include cache class
+			include_once 'caching.php';
+			
+			// Initiate class
+			$cache = new ffg_cache();
 
-		// Get the feed
-		$content = $this->facebook->api('/'. $feed_id .'/feed?date_format=U');
-
+			// Let it do it's magic. (Will return the needed content)
+			$content = $cache->theMagic(&$this, '/'. $feed_id .'/feed?date_format=U', (($cache_feed * 60)));
+			
+		} else
+			$content = $this->facebook->api('/'. $feed_id .'/feed?date_format=U');
+		
 		if ( $content && count($content['data']) > 0 ) {
 
 			// Output string
@@ -444,7 +477,7 @@ class ffg {
 				$app = $this->facebook->api('/'. $feed_id .'?date_format=U');
 
 				if ( $app ) {
-					$output .= "<p class='fb-page-name'><a href='". $app['link'] ."' alt='". $app['name'] ."'>". $app['name'] ."</a></p>\n";
+					$output .= "<p class='fb-page-name'><a href='". $app['link'] ."' title='". $app['name'] ."'>". $app['name'] ."</a></p>\n";
 				}
 
 			}
@@ -454,7 +487,7 @@ class ffg {
 				if ( empty($item) )
 					continue;
 								
-				// If we're limiting it to posts posted by the retrieved page
+				// If we're limiting it to posts from the retrieved page
 				if ( $limit == true ) {
 
 					if ( $feed_id != $item['from']['id'] )
@@ -477,7 +510,7 @@ class ffg {
 				// Get the description of item or the message of the one who posted the item
 				$descript = isset($item['description']) ? trim($item['description']) : null;
 				// Turn urls into links and replace new lines with <br />
-				$descript = preg_replace(array('/((?:http[s]?:\/\/)|www\.)([^\s]+)/', '/\n/'), array("<a href='$1$2'>\\2</a>", '<br />'), $descript);
+				$descript = preg_replace(array('/((http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}\/\S*)/', '/\n/'), array("<a href='$1'>\\1</a>", '<br />'), $descript);
 				
 				// Get the description of item or the message of the one who posted the item
 				$story = isset($item['story']) ? trim($item['story']) : null;
@@ -558,11 +591,14 @@ class ffg {
 						
 							$output .= "<p>\n";
 							
-								if ( $show_thumbnails != false && isset($item['picture']) )
-									$output .= "<img src='". htmlentities($item['picture']) ."' class='thumbnail alignleft' />\n";
+								if ( $show_thumbnails != false && isset($item['picture']) ) {
+									$img = "<img src='". htmlentities($item['picture']) ."' class='thumbnail alignleft' />\n";
+									if ( isset($item['link']) )
+										$output .= "<a href='". esc_attr($item['link']) ."' class='the_link'>$img</a>\n";
+								}
 								
 								// The item link
-								if ( isset($item['link']) )
+								if ( isset($item['link']) && isset($item['name']) )
 									$output .= "<a href='". esc_attr($item['link']) ."' class='the_link'>". $item['name'] ."</a>\n";
 								
 							$output .= "</p>\n";
@@ -573,23 +609,25 @@ class ffg {
 							else if ( isset($item['caption']) )
 								$output .= "<p class='caption'>". $item['caption'] ."</p>\n";
 							
-							$output .= "<p>\n";
 							
-							// The item source
-							// LBTD: Do something with this?
-							// if ( isset($item['source']) )
-								// $output .= "<a href='". esc_attr($item['source']) ."' class='source'>". $item['name'] ."</a>\n";
-							
-							if ( $descript != null )
-								$output .= "<span class='descript'>". $descript ."</span>\n";
+							if ( $descript != null || $properties != null ) {
+								
+								$output .= "<p>\n";
+														
+								if ( $descript != null )
+									$output .= "<span class='descript'>". $descript ."</span>\n";
 						
-							if ( $descript != null && $properties != null )
-								$output .= "<br /><br />";
+								if ( $descript != null && $properties != null )
+									$output .= "<br /><br />";
 
-							if ( $properties != null )
-								$output .= $properties;
+								if ( $properties != null )
+									$output .= $properties;
+								
+								$output .= "</p>\n";
+								
+							}
 
-						$output .= "</p>\n</blockquote>\n";
+						$output .= "</blockquote>\n";
 						
 					}
 
@@ -631,7 +669,7 @@ class ffg {
 
 /* - - - - - -
 	
-	Used to display a feed without you haveing to mess with the class.
+	Used to display a feed without you having to mess with the class.
 	If you're displaying more than one feed I suggest using the class 
 	and not this function.
 		

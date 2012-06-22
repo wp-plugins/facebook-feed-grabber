@@ -43,6 +43,7 @@ class ffg_admin {
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function settings_api_init() {
 		
+		
 		register_setting( 'facebook-feed-grabber', 'ffg_options', array(&$this, 'validate_options') ); 
 
 		// App ID & Secret
@@ -55,12 +56,13 @@ class ffg_admin {
 		add_settings_section('misc_settings', __('Misc Settings'), array(&$this, 'setting_section_callback_function'), __file__);
 		add_settings_field('ffg_default_feed', __('Default Feed'), array(&$this, 'default_feed_field'), __file__, 'misc_settings');
 		add_settings_field('ffg_num_entries', __('Number of Entries'), array(&$this, 'num_entries_field'), __file__, 'misc_settings');
+		add_settings_field('ffg_cache_feed', __('Cache Feed'), array(&$this, 'cache_feed_select'), __FILE__, 'misc_settings');
 		add_settings_field('ffg_show_title', __('Show Title'), array(&$this, 'show_title_checkbox'), __FILE__, 'misc_settings');
 		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array(&$this, 'limit_checkbox'), __FILE__, 'misc_settings');
 		add_settings_field('ffg_show_thumbnails', __('Show Thumbnails'), array(&$this, 'show_thumbnails_checkbox'), __FILE__, 'misc_settings' );
 		add_settings_field('ffg_style_sheet', __('Styles Sheet'), array(&$this, 'style_sheet_radio'), __FILE__, 'misc_settings');
 		add_settings_field('delete_options', __('Delete Options on Deactivation'), array(&$this, 'delete_options_checkbox'), __FILE__, 'misc_settings');
-
+			
 	}
 	// End settings_api_init()
 	
@@ -77,7 +79,6 @@ class ffg_admin {
 		 $plugin_url = trailingslashit( get_bloginfo('wpurl') ).PLUGINDIR.'/'. dirname( plugin_basename(__FILE__) );
 
 		// Include our scripts.
-		wp_enqueue_script('jquery');
 		wp_enqueue_script('ffg_options', $plugin_url .'/options.js', array('jquery'));
 
 		// We need to feed some stuff to our script
@@ -224,6 +225,41 @@ class ffg_admin {
 	}
 	// End num_entries_field()
 	
+	
+	/* - - - - - -
+		
+		Show cache feed select box.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function cache_feed_select() {
+		
+		// See if there is a cache folder and that it's writable. 
+		if ( ! wp_mkdir_p($this->options['cache_folder']) ) {
+			$nocache = true;
+			$this->options['cache_feed'] = 0;
+		} else 
+			$nocache = false;
+			
+		?>
+		<select name="ffg_options[cache_feed]">
+			<option value="0"<?php echo $this->options['cache_feed'] == 0 ? ' selected="selected"' : ''; ?>>False</option>
+			<option value="5"<?php echo $this->options['cache_feed'] == 5 ? ' selected="selected"' : ''; ?>>5 Minute</option>
+			<option value="10"<?php echo $this->options['cache_feed'] == 10 ? ' selected="selected"' : ''; ?>>10 Minute</option>
+			<option value="15"<?php echo $this->options['cache_feed'] == 15 ? ' selected="selected"' : ''; ?>>15 Minute</option>
+			<option value="30"<?php echo $this->options['cache_feed'] == 30 ? ' selected="selected"' : ''; ?>>30 Minute</option>
+			<option value="45"<?php echo $this->options['cache_feed'] == 45 ? ' selected="selected"' : ''; ?>>45 Minute</option>
+			<option value="60"<?php echo $this->options['cache_feed'] == 60 ? ' selected="selected"' : ''; ?>>60 Minute</option>
+			
+		</select>
+		<span class="description"><?php _e('How long to cache feeds before refreshing them.') ?></span>
+		<?php
+		if ( $nocache == true ) {
+			echo '<span class="error-message">';
+			_e('Facebook Feed Grabber will be unable to cache feeds because the location "'. $this->options['cache_folder'] .'" does not appear to be a writable directory.');
+			echo "</span>\n";
+		}
+			
+	}
 	
 	/* - - - - - -
 		
@@ -406,6 +442,7 @@ class ffg_admin {
 		// Misc Settigns
 		$input['default_feed'] = ctype_digit($input['default_feed']) !== false ? $input['default_feed'] : null;
 		$input['num_entries'] = intval($input['num_entries']);
+		$input['cache_feed'] = intval($input['cache_feed']);
 		$input['show_title'] = ( isset($input['show_title']) ) ? 1 : 0;
 		$input['limit'] = ( isset($input['limit']) ) ? 1 : 0;
 		$input['show_thumbnails'] = ( isset($input['show_thumbnails']) ) ? 1 : 0;
@@ -432,7 +469,9 @@ class ffg_admin {
 		// End if isset($input['style_sheet'])
 		
 		$input['delete_options'] = ( isset($input['delete_options']) ) ? 1 : 0;
-
+		
+		$input = array_merge($this->options, $input);
+		
 		return $input;
 	}
 	// End validate_options()

@@ -4,7 +4,7 @@ Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
 Requires at least: 2.8
 Tested up to: 3.2.1
-Stable tag: 0.6
+Stable tag: 0.7
 
 Display the feed of a public page or profile. Requires you create a Facebook Application
 
@@ -91,6 +91,8 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Added thumbnail support for links, videos and photo albums.
 * Removed the status, link and video post types restriction.
 * Updated how it checks to see if there are comments.
+* Fixed the plugin so it plays nice with other plugins that are based on the Facebook PHP SDK.
+* Updated the Facebook PHP SDK
 
 = 0.6 =
 * Changed the functions used to display a feed to be in the class 'ffg'. I will likely leave fb_feed() indefinitely for the bulk of people who are just displaying one feed. Feed back on this would be welcomed.
@@ -154,4 +156,5 @@ My apologies to those who jumped on 0.5 only to find see bug and upgrade again v
 == Next Version ==
 
 In no particular order,
+* Add ability to load the feed via javascript.
 * Add oEmbed support maybe?
