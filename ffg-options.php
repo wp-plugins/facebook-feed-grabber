@@ -238,10 +238,10 @@ class ffg_admin {
 	function proxy_url_field() {
 		$hide = ' style="display: none;"';
 		?>
-		<div id="proxyDisabled"<?php echo isset($this->options['proxy_url']) ? $hide: null; ?>>
+		<div id="proxyDisabled"<?php echo !empty($this->options['proxy_url']) ? $hide : null; ?>>
 			<a href="#enableProxy"><?php _e('Enable Proxy'); ?></a> - <?php _e('Click to enable if you\'re server is behind a proxy.') ?></span>
 		</div>
-		<div id="proxyEnabled"<?php echo isset($this->options['proxy_url']) ? null: $hide; ?>>
+		<div id="proxyEnabled"<?php echo empty($this->options['proxy_url']) ? $hide : null; ?>>
 			<input type="text" name="ffg_options[proxy_url]" value="<?php echo esc_attr($this->options['proxy_url']); ?>" class="regular-text" />
 			<span class="description"><?php _e('If your server connects to the internet via a proxy, set the URL. Otherwise leave blank.') ?></span>
 		</div>
