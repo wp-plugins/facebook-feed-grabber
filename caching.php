@@ -93,7 +93,7 @@ class ffg_cache {
 		$cache_file = $this->folder . $this->getName($file);
 		
 		// See if there is a cache folder and that it's writable. 
-		if ( wp_mkdir_p($this->cache_folder) && ( ! file_exists($cache_file) || is_writable($cache_file) ) ) {
+		if ( wp_mkdir_p($this->folder) && ( ! file_exists($cache_file) || is_writable($cache_file) ) ) {
 		
 			$fp = fopen($cache_file, 'w');
 			$write = fwrite($fp, $content);

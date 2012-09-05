@@ -48,14 +48,18 @@ class ffg_admin {
 
 		// App ID & Secret
 		add_settings_section('fb_app_info', __('Facebook App ID & Secret'), array(&$this, 'setting_section_callback_function'), __file__);
+		// - -
 		add_settings_field('ffg_app_id', __('App ID'), array(&$this, 'app_id_field'), __file__, 'fb_app_info');
 		add_settings_field('ffg_secret', __('App Secret'), array(&$this, 'secret_field'), __FILE__, 'fb_app_info');
 		add_settings_field('ffg_verify', __('Verify App Id & Secret'), array(&$this, 'verify_button'), __FILE__, 'fb_app_info');
 
 		// Misc Settings
 		add_settings_section('misc_settings', __('Misc Settings'), array(&$this, 'setting_section_callback_function'), __file__);
+		// - -
 		add_settings_field('ffg_default_feed', __('Default Feed'), array(&$this, 'default_feed_field'), __file__, 'misc_settings');
 		add_settings_field('ffg_num_entries', __('Number of Entries'), array(&$this, 'num_entries_field'), __file__, 'misc_settings');
+		add_settings_field('ffg_proxy_url', __('Proxy URL'), array(&$this, 'proxy_url_field'),
+		__file__, 'misc_settings');
 		add_settings_field('ffg_cache_feed', __('Cache Feed'), array(&$this, 'cache_feed_select'), __FILE__, 'misc_settings');
 		add_settings_field('ffg_show_title', __('Show Title'), array(&$this, 'show_title_checkbox'), __FILE__, 'misc_settings');
 		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array(&$this, 'limit_checkbox'), __FILE__, 'misc_settings');
@@ -224,6 +228,26 @@ class ffg_admin {
 		<?php
 	}
 	// End num_entries_field()
+	
+	
+	/* - - - - - -
+	
+		Proxy URL field
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function proxy_url_field() {
+		$hide = ' style="display: none;"';
+		?>
+		<div id="proxyDisabled"<?php echo isset($this->options['proxy_url']) ? $hide: null; ?>>
+			<a href="#enableProxy"><?php _e('Enable Proxy'); ?></a> - <?php _e('Click to enable if you\'re server is behind a proxy.') ?></span>
+		</div>
+		<div id="proxyEnabled"<?php echo isset($this->options['proxy_url']) ? null: $hide; ?>>
+			<input type="text" name="ffg_options[proxy_url]" value="<?php echo esc_attr($this->options['proxy_url']); ?>" class="regular-text" />
+			<span class="description"><?php _e('If your server connects to the internet via a proxy, set the URL. Otherwise leave blank.') ?></span>
+		</div>
+	<?php
+	}
+	// End proxy_url_field()
 	
 	
 	/* - - - - - -
@@ -442,6 +466,7 @@ class ffg_admin {
 		// Misc Settigns
 		$input['default_feed'] = ctype_digit($input['default_feed']) !== false ? $input['default_feed'] : null;
 		$input['num_entries'] = intval($input['num_entries']);
+		$input['proxy_url'] = trim($input['proxy_url']);
 		$input['cache_feed'] = intval($input['cache_feed']);
 		$input['show_title'] = ( isset($input['show_title']) ) ? 1 : 0;
 		$input['limit'] = ( isset($input['limit']) ) ? 1 : 0;

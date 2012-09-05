@@ -5,7 +5,10 @@ jQuery(document).ready(function($) {
 	// 	The fields we'll be accessing.
 	var v_span = jQuery('#ffg-verify').siblings('span');
 	var verify = jQuery('#ffg-verify');
-
+	var proxyDisabled = jQuery('#proxyDisabled');
+	var proxyEnabled = jQuery('#proxyEnabled');
+	var proxyURL = jQuery('#proxyEnabled input');
+	
 	// The loading image.
 	var loading = '<img alt="" id="ajax-loading" class="ajax-loading icon" src="'+ ffg_options.wpurl +'/wp-admin/images/loading.gif" style="visibility: visible;" />';
 	var no = '<img alt="" class="icon" src="'+ ffg_options.wpurl +'/wp-admin/images/no.png" />';
@@ -60,4 +63,10 @@ jQuery(document).ready(function($) {
 		});
 	})
 
+	if ( proxyURL.val() == '' ) {
+		proxyDisabled.children("a").click(function() {
+			proxyDisabled.hide('fast');
+			proxyEnabled.show('fast');
+		})
+	}
 });

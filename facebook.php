@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Lets you display a facebook feed from a public profile. Requires a facebook App Id andSecret key. Only works with profiles that have public content at this time. To adjust the default number of entries it displays then go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.7
+Version: 0.7.1
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
  *
@@ -51,6 +51,9 @@ class ffg_setup {
 	// For the defaults. (Look in $this->__construct())
 	public $defaults = false;
 	
+	// Will be true if the SDK has been loaded.
+	private $sdk_loaded = false;
+	
 
 	/* - - - - - -
 		
@@ -72,6 +75,7 @@ class ffg_setup {
 			'cache_feed' => 5,
 			'cache_folder' => WP_CONTENT_DIR. '/uploads/cache/',
 			'num_entries' => 3,
+			'proxy_url' => null,
 			'limit' => 1,
 			'show_thumbnails' => 1,
 			'style_sheet' => 'style.css',
@@ -91,8 +95,12 @@ class ffg_setup {
 		
 	}
 	
-	// 
-	// Define default options
+	
+	/* - - - - - -
+		
+		Define default options
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function activate() {
 	
 		// Get stored plugin options
@@ -113,8 +121,12 @@ class ffg_setup {
 		update_option('ffg_options', $options);
 	}
 
-	// 
-	// Delete ffg options if 'restore_defaults' is true
+	
+	/* - - - - - -
+		
+		Delete ffg options if 'restore_defaults' is true
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function deactivate(  ) {
 	
 		$options = get_option('ffg_options');
@@ -124,6 +136,23 @@ class ffg_setup {
 	
 	}
 	
+	
+	/* - - - - - -
+		
+		loads facebook SDK
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function load_sdk() {
+		
+		if ( $this->sdk_loaded )
+			return true;
+		
+		// 
+		// Get the facebook sdk
+		if ( ! class_exists('Facebook') )
+			require_once 'facebook-sdk/facebook.php';
+
+	}
 }
 // End class ffg_setup
 
@@ -136,11 +165,6 @@ register_deactivation_hook(__FILE__, array(&$ffg_setup, 'deactivate'));
 // The Facebook PHP SDK uses sessions. So start sessions now before anything is output.
 if ( !session_id() )
   session_start();
-
-// 
-// Get the facebook sdk
-if ( ! class_exists('Facebook') )
-	require_once 'facebook-sdk/facebook.php';
 
 // 
 // Get the options page stuff if in the admin area.
@@ -169,13 +193,13 @@ class ffg {
 		
 	// Date formats for event times.
 	public $date_formats = array(
-		// For event dates
+		// Event date formats
 		'event' => array(
 			'today' => '\T\o\d\a\y \a\t g:ia',
 			'this_year' => 'l, F jS \a\t g:ia',
 			'other_year' => 'l, F jS, Y \a\t g:ia',
 		),
-		// For the dates something was posted
+		// Date formats for when something was posted
 		'feed' => array(
 			'today' => '\T\o\d\a\y \a\t g:ia',
 			'this_year' => 'M jS g:ia',
@@ -242,11 +266,20 @@ class ffg {
 		if ( $this->secret == null )
 			return false;
 		
+		// Load the facebook SDK.
+		global $ffg_setup;
+		$ffg_setup->load_sdk();
+		
 		// Make our facebook connection.
 		$this->facebook = new Facebook(array(
 			  'appId'  => $this->appId,
 			  'secret' => $this->secret,
 			));
+			
+		// Proxy support
+		if ( isset($this->options['proxy_url']) && !empty($this->options['proxy_url']) ) {
+			Facebook::$CURL_OPTS[CURLOPT_PROXY] = $this->options['proxy_url'];
+		}
 		
 		if ( $this->facebook === false )
 			return false;

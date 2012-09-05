@@ -81,16 +81,16 @@ My first guess is that your content isn't set to be viewable by everyone or you 
 
 Because you have either supplied an invalid App Id & Secret combo or you're trying to access something you don't have permissions for.
 
-= Broken in WP 2.8 =
-
-Caching doesn't work in Wordpress 2.8. As the function wp_mkdir_p( ) ends up in an infinite loop. I'm not really sure why.
-
-
 == Screenshots ==
 
 1. The options page.
 
 == Changelog ==
+
+= 0.7.1 =
+* Fixed bug in cache.php (bad variable reference)
+* Updated to latest Facebook SDK
+* Added Proxy Support (untested)
 
 = 0.7 =
 * Added thumbnail support for links, videos and photo albums.
@@ -135,6 +135,11 @@ Caching doesn't work in Wordpress 2.8. As the function wp_mkdir_p( ) ends up in 
 
 == Upgrade Notice ==
 
+= 0.7.1 =
+* Fixed bug in cache.php (bad variable reference)
+* Added Proxy Support (untested)
+
+
 = 0.7 =
 * Added thumbnail support for links, videos and photo albums.
 * Removed the status, link and video post types restriction.
@@ -157,7 +162,6 @@ My apologies to those who jumped on 0.5 only to find see bug and upgrade again v
 
 == Known Issues ==
 * In some cases the time for a shared event displays in the users timezone but does not account for daylight savings time.
-* Caching doesn't work in Wordpress 2.8. As the function wp_mkdir_p( ) ends up in an infinite loop. I'm not really sure why.
 
 == Next Version ==
 
