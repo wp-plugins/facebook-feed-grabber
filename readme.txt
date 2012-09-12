@@ -4,7 +4,7 @@ Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
 Requires at least: 2.8
 Tested up to: 3.2.1
-Stable tag: 0.7.1
+Stable tag: 0.7
 
 Display the feed of a public page or profile. Requires you create a Facebook Application
 
