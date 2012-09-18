@@ -239,7 +239,7 @@ class ffg_admin {
 		$hide = ' style="display: none;"';
 		?>
 		<div id="proxyDisabled"<?php echo !empty($this->options['proxy_url']) ? $hide : null; ?>>
-			<a href="#enableProxy"><?php _e('Enable Proxy'); ?></a> - <?php _e('Click to enable if you\'re server is behind a proxy.') ?></span>
+			<a href="#enableProxy"><?php _e('Enable Proxy'); ?></a> - <span class="description"><?php _e('Click to enable if you\'re server is behind a proxy.') ?></span>
 		</div>
 		<div id="proxyEnabled"<?php echo empty($this->options['proxy_url']) ? $hide : null; ?>>
 			<input type="text" name="ffg_options[proxy_url]" value="<?php echo esc_attr($this->options['proxy_url']); ?>" class="regular-text" />
@@ -400,7 +400,11 @@ class ffg_admin {
 			die();
 		} else
 			$result['secret'] = trim($_POST['secret']);
-
+		
+		// Load the facebook SDK.
+		global $ffg_setup;
+		$ffg_setup->load_sdk();
+		
 		// Try to make the connection
 		$facebook = new Facebook(array(
 			  'appId'  => $result['app_id'],

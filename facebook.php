@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Lets you display a facebook feed from a public profile. Requires a facebook App Id andSecret key. Only works with profiles that have public content at this time. To adjust the default number of entries it displays then go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.7.1
+Version: 0.7.2
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
  *
@@ -46,7 +46,7 @@ class ffg_setup {
 	
 
 	// Current plugin version
-	protected $version = '0.7';
+	protected $version = '0.7.2';
 	
 	// For the defaults. (Look in $this->__construct())
 	public $defaults = false;
@@ -151,10 +151,12 @@ class ffg_setup {
 		// Get the facebook sdk
 		if ( ! class_exists('Facebook') )
 			require_once 'facebook-sdk/facebook.php';
+		
+		$this->sdk_loaded = true;
 
 	}
-}
-// End class ffg_setup
+
+}// End class ffg_setup
 
 // On activation or deactivation
 $ffg_setup = new ffg_setup();
@@ -269,13 +271,13 @@ class ffg {
 		// Load the facebook SDK.
 		global $ffg_setup;
 		$ffg_setup->load_sdk();
-		
+				
 		// Make our facebook connection.
 		$this->facebook = new Facebook(array(
 			  'appId'  => $this->appId,
 			  'secret' => $this->secret,
 			));
-			
+		
 		// Proxy support
 		if ( isset($this->options['proxy_url']) && !empty($this->options['proxy_url']) ) {
 			Facebook::$CURL_OPTS[CURLOPT_PROXY] = $this->options['proxy_url'];
@@ -485,6 +487,7 @@ class ffg {
 			
 		} else
 			$content = $this->facebook->api('/'. $feed_id .'/feed?date_format=U');
+	
 		
 		if ( $content && count($content['data']) > 0 ) {
 
@@ -514,7 +517,7 @@ class ffg {
 				}
 
 			}
-
+			
 			foreach($content['data'] as $item) {
 				
 				if ( empty($item) )
@@ -728,7 +731,6 @@ function fb_feed_shortcode( $args, $feed_id = null ) {
 	$args['echo'] = false;
 	
 	$facebook = new ffg();
-	
 	$facebook = $facebook->feed($feed_id, $args);
 	
 	return $facebook;
