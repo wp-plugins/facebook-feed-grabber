@@ -4,7 +4,7 @@ Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
 Requires at least: 2.8
 Tested up to: 3.2.1
-Stable tag: 0.7.2
+Stable tag: 0.7.3
 
 Display the feed of a public page or profile. Requires you create a Facebook Application
 
@@ -87,6 +87,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Changelog ==
 
+= 0.7.3 =
+* Updated Facebook SDK
+
 = 0.7.2 =
 * Fixed admin side bug where it didn't load the SDK's after a change in the last version.
 
@@ -137,6 +140,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Has an options page and `fb_feed($feed_id)` function. 
 
 == Upgrade Notice ==
+
+= 0.7.3 =
+* Updated Facebook SDK. Update if you're getting the following: "SSL certificate problem, verify that the CA cert is OK. Details: error:14090086:SSL routines:SSL3_GET_SERVER_CERTIFICATE:certificate verify failed"
 
 = 0.7.2 =
 * Fixed admin side bug where it didn't load the SDK's after a change in the last version. (If you're not going to be verifying your app credentials you could skip this version.)
