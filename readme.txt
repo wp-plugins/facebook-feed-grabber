@@ -3,8 +3,8 @@ Contributors: bonnerl
 Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
 Requires at least: 2.8
-Tested up to: 3.2.1
-Stable tag: 0.7.2
+Tested up to: 3.4.2
+Stable tag: 0.7.3
 
 Display the feed of a public page or profile. Requires you create a Facebook Application
 
@@ -87,6 +87,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Changelog ==
 
+= 0.8 =
+* Added widget to display feed.
+
 = 0.7.2 =
 * Fixed admin side bug where it didn't load the SDK's after a change in the last version.
 
@@ -137,6 +140,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Has an options page and `fb_feed($feed_id)` function. 
 
 == Upgrade Notice ==
+
+= 0.8 =
+* Adds a widget for displaying a feed.
 
 = 0.7.2 =
 * Fixed admin side bug where it didn't load the SDK's after a change in the last version. (If you're not going to be verifying your app credentials you could skip this version.)
