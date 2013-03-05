@@ -3,8 +3,8 @@ Contributors: bonnerl
 Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
 Requires at least: 2.8
-Tested up to: 3.4.2
-Stable tag: 0.7.3
+Tested up to: 3.5.1
+Stable tag: 0.7.2
 
 Display the feed of a public page or profile. Requires you create a Facebook Application
 
@@ -89,6 +89,7 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 = 0.8 =
 * Added widget to display feed.
+* Moved php session start to be run during WP's init action. Makes plugin more proper and compatibile with other plugins.
 
 = 0.7.2 =
 * Fixed admin side bug where it didn't load the SDK's after a change in the last version.
@@ -143,6 +144,7 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 = 0.8 =
 * Adds a widget for displaying a feed.
+* Moved php session start to be run during WP's init action. Makes plugin more proper and compatibile with other plugins.
 
 = 0.7.2 =
 * Fixed admin side bug where it didn't load the SDK's after a change in the last version. (If you're not going to be verifying your app credentials you could skip this version.)
@@ -150,7 +152,6 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 = 0.7.1 =
 * Fixed bug in cache.php (bad variable reference)
 * Added Proxy Support (untested)
-
 
 = 0.7 =
 * Added thumbnail support for links, videos and photo albums.

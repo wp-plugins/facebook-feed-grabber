@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Lets you display a facebook feed from a public profile. Requires a facebook App Id andSecret key. Only works with profiles that have public content at this time. To adjust the default number of entries it displays then go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.7.2
+Version: 0.8.1
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
  *
@@ -46,7 +46,7 @@ class ffg_setup {
 	
 
 	// Current plugin version
-	protected $version = '0.7.2';
+	protected $version = '0.8';
 	
 	// For the defaults. (Look in $this->__construct())
 	public $defaults = false;
@@ -139,6 +139,27 @@ class ffg_setup {
 	
 	/* - - - - - -
 		
+		Starts a session if it isn't already done.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function sessionStart() {
+	    if( !session_id() )
+			session_start();
+	}
+	
+	
+	/* - - - - - -
+		
+		Destroy the session.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function sessionDestroy() {
+	    session_destroy();
+	}
+	
+	
+	/* - - - - - -
+		
 		loads facebook SDK
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -153,7 +174,8 @@ class ffg_setup {
 			require_once 'facebook-sdk/facebook.php';
 		
 		$this->sdk_loaded = true;
-
+		
+		return true;
 	}
 
 }// End class ffg_setup
@@ -164,14 +186,19 @@ register_activation_hook(__FILE__, array(&$ffg_setup, 'activate'));
 register_deactivation_hook(__FILE__, array(&$ffg_setup, 'deactivate'));
 
 
-// The Facebook PHP SDK uses sessions. So start sessions now before anything is output.
-if ( !session_id() )
-  session_start();
+// The Facebook PHP SDK uses sessions. Lets hook in session start and stop functionality.
+add_action('init', array($ffg_setup, 'sessionStart'), 1);
+add_action('wp_logout', array($ffg_setup, 'sessionDestroy'));
+add_action('wp_login', array($ffg_setup, 'sessionDestroy'));
+
 
 // 
 // Get the options page stuff if in the admin area.
 if ( is_admin() )
 	include 'ffg-options.php';
+
+// Hook in widgets.
+include_once 'ffg-widgets.php';
 
 /* - - - - - -
  
@@ -398,6 +425,18 @@ class ffg {
 
 	
 	/* - - - - - -
+		
+		Retrieves a feed ID if given a facebook nickname or validates a feed id if givin a number.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function validate_feed( $feed ) {
+		
+		
+		
+	}
+	// End validate_feed()
+	
+	/* - - - - - -
 
 		Retrieves a public page's news feed and by default echos it.
 
@@ -585,7 +624,7 @@ class ffg {
 
 				// Check for comments
 				if ( $item['comments']['count'] > 0 ) {
-					$comments = ( $item['comments']->count > 1 ) ? __(' Comments') : __(' Comment');
+					$comments = ( $item['comments']['count'] > 1 ) ? __(' Comments') : __(' Comment');
 					$comments = ' &bull; '. $item['comments']->count . $comments;
 				} else
 					$comments = __(' &bull; No Comments');
