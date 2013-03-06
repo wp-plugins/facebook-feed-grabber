@@ -27,8 +27,7 @@ class ffg_Widget extends WP_Widget {
 	function widget( $args, $instance ) {
 		extract( $args, EXTR_SKIP );
 		
-		if ( isset($args['feed']) )
-			unset($args['feed']);
+		$feed = ( $instance['feed'] != null ) ? $instance['feed'] : null;
 		
 		echo $before_widget;
 
@@ -46,7 +45,7 @@ class ffg_Widget extends WP_Widget {
      * @return array The validated and (if necessary) amended settings
      **/
 	function update( $new_instance, $old_instance ) {
-		$updated_instance['feed'] = ( trim($new_instance['feed']) != null ) ? $new_instance['feed'] : null;
+		$updated_instance['feed'] = ( ctype_digit($input['default_feed']) !== false ) ? $new_instance['feed'] : null;
 		
 		return $updated_instance;
 	}
