@@ -2,40 +2,36 @@
 /*
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
-Description: Lets you display a facebook feed from a public profile. Requires a facebook App Id andSecret key. Only works with profiles that have public content at this time. To adjust the default number of entries it displays then go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
+Description: Allows you to display the feed of a public page or profile on your website. Requires that you create a Facebook Application. Only works with profiles that have public content. To set your App ID & Secret as well as other settings go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
 Version: 0.8
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
+License: GPLv2 or Later
+
  *
  * Tested and Developed with php 5
  * 
- * Uses facebook/php-sdk 3.1.1
+ * Uses facebook/php-sdk 3.2.2
  * http://github.com/facebook/php-sdk/
  *
  */
 
 /**
- * Copyright (c) 2011 Lucas Bonner. All rights reserved.
+ * Copyright 2011 Lucas Bonner.
  *
- * Released under the GPL license
- * http://www.opensource.org/licenses/gpl-license.php
- *
- * This is an add-on for WordPress
- * http://wordpress.org/
- *
- * **********************************************************************
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License, version 2, as 
+ * published by the Free Software Foundation.
  * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * **********************************************************************
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 /* - - - - - -
 	
@@ -556,7 +552,7 @@ class ffg {
 				}
 
 			}
-			
+						
 			foreach($content['data'] as $item) {
 				
 				if ( empty($item) )
