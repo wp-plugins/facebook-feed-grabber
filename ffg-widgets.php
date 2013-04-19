@@ -45,7 +45,7 @@ class ffg_Widget extends WP_Widget {
      * @return array The validated and (if necessary) amended settings
      **/
 	function update( $new_instance, $old_instance ) {
-		$updated_instance['feed'] = ( ctype_digit($input['default_feed']) !== false ) ? $new_instance['feed'] : null;
+		$updated_instance['feed'] = ( ctype_digit($new_instance['feed']) !== false ) ? $new_instance['feed'] : null;
 		
 		return $updated_instance;
 	}

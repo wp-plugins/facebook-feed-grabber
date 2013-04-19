@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Allows you to display the feed of a public page or profile on your website. Requires that you create a Facebook Application. Only works with profiles that have public content. To set your App ID & Secret as well as other settings go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.8
+Version: 0.8.1
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
 License: GPLv2 or Later
@@ -11,7 +11,7 @@ License: GPLv2 or Later
  *
  * Tested and Developed with php 5
  * 
- * Uses facebook/php-sdk 3.2.2
+ * Uses facebook/php-sdk v3.2.2
  * http://github.com/facebook/php-sdk/
  *
  */
@@ -42,7 +42,7 @@ class ffg_setup {
 	
 
 	// Current plugin version
-	protected $version = '0.8';
+	protected $version = '0.8.1';
 	
 	// For the defaults. (Look in $this->__construct())
 	public $defaults = false;
@@ -427,7 +427,7 @@ class ffg {
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function validate_feed( $feed ) {
 		
-		
+		// TODO
 		
 	}
 	// End validate_feed()
@@ -522,8 +522,7 @@ class ffg {
 			
 		} else
 			$content = $this->facebook->api('/'. $feed_id .'/feed?date_format=U');
-	
-		
+			
 		if ( $content && count($content['data']) > 0 ) {
 
 			// Output string
@@ -557,6 +556,10 @@ class ffg {
 				
 				if ( empty($item) )
 					continue;
+				
+				if ( isset($item['status_type']) && $item['status_type'] == 'approved_friend' )
+					continue;
+				
 								
 				// If we're limiting it to posts from the retrieved page
 				if ( $limit == true ) {
@@ -675,11 +678,16 @@ class ffg {
 							$output .= "</p>\n";
 								
 							// The item caption
-							if ( isset($item['caption']) && preg_match('/((?:http[s]?:\/\/)|www\.)([^\s]+)/', $item['caption']) )
-								$output .= "<p class='caption'><a href='". esc_attr($item['caption']) ."'>". $item['caption'] ."</a><p>\n";
-							else if ( isset($item['caption']) )
-								$output .= "<p class='caption'>". $item['caption'] ."</p>\n";
-							
+							if ( isset($item['caption']) ) {
+								if ( preg_match('/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/', $item['caption']) ) {
+									$caption = preg_replace('/^(?!https?:\/\/)/', 'http://', $item['caption']);
+									$caption = "<a href='". esc_attr($caption) ."'>". $item['caption'] ."</a>\n";
+									
+								} else
+									$caption = $item['caption'];
+									
+								$output .= "<p class='caption'>". $caption ."</p>\n";
+							}							
 							
 							if ( $descript != null || $properties != null ) {
 								
