@@ -4,7 +4,7 @@ Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
 Requires at least: 2.8
 Tested up to: 3.5.1
-Stable tag: 0.8.1
+Stable tag: 0.8.2
 License: GPLv2 or Later
 
 Allows you to display the feed of a public page or profile on your website. Requires that you create a Facebook Application.
@@ -121,6 +121,10 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Changelog ==
 
+= 0.8.2 =
+* Removed call time pass-by-reference for compatibility with PHP 5.4.
+* Add Localization. (Beta)
+
 = 0.8.1 =
 * Filter out statuses saying you are now friends with Jane Doe.
 * Bug Fix: Adds http:// when needed to shared links.
@@ -180,6 +184,10 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Has an options page and `fb_feed($feed_id)` function. 
 
 == Upgrade Notice ==
+
+= 0.8.2 =
+* Removed call time pass-by-reference for compatibility with PHP 5.4.
+* Add Localization. (Beta)
 
 = 0.8 =
 * Adds a widget for displaying a feed.

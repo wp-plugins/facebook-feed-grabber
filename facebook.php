@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Allows you to display the feed of a public page or profile on your website. Requires that you create a Facebook Application. Only works with profiles that have public content. To set your App ID & Secret as well as other settings go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.8.1
+Version: 0.8.2
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
 License: GPLv2 or Later
@@ -42,7 +42,7 @@ class ffg_setup {
 	
 
 	// Current plugin version
-	protected $version = '0.8.1';
+	protected $version = '0.8.2';
 	
 	// For the defaults. (Look in $this->__construct())
 	public $defaults = false;
@@ -71,6 +71,7 @@ class ffg_setup {
 			'cache_feed' => 5,
 			'cache_folder' => WP_CONTENT_DIR. '/uploads/cache/',
 			'num_entries' => 3,
+			'locale' => 'en_US',
 			'proxy_url' => null,
 			'limit' => 1,
 			'show_thumbnails' => 1,
@@ -178,8 +179,8 @@ class ffg_setup {
 
 // On activation or deactivation
 $ffg_setup = new ffg_setup();
-register_activation_hook(__FILE__, array(&$ffg_setup, 'activate'));
-register_deactivation_hook(__FILE__, array(&$ffg_setup, 'deactivate'));
+register_activation_hook(__FILE__, array($ffg_setup, 'activate'));
+register_deactivation_hook(__FILE__, array($ffg_setup, 'deactivate'));
 
 
 // The Facebook PHP SDK uses sessions. Lets hook in session start and stop functionality.
@@ -495,6 +496,8 @@ class ffg {
 		// Default arguments
 		$defaults = array(
 			'cache_feed' => $this->options['cache_feed'],
+			'num_entries' => '2',
+			'locale' => $this->options['locale'],
 			'container' => 'div',
 			'container_class' => 'fb-feed',
 			'container_id' => 'fb-feed',
@@ -518,10 +521,10 @@ class ffg {
 			$cache = new ffg_cache();
 
 			// Let it do it's magic. (Will return the needed content)
-			$content = $cache->theMagic(&$this, '/'. $feed_id .'/feed?date_format=U', (($cache_feed * 60)));
+			$content = $cache->theMagic($this, '/'. $feed_id .'/feed?date_format=U&locale='. $locale, (($cache_feed * 60)));
 			
 		} else
-			$content = $this->facebook->api('/'. $feed_id .'/feed?date_format=U');
+			$content = $this->facebook->api('/'. $feed_id .'/feed?date_format=U&locale='. $locale);
 			
 		if ( $content && count($content['data']) > 0 ) {
 
@@ -544,7 +547,7 @@ class ffg {
 			if ( $show_title == true ) {
 
 				// This call will always work since we are fetching public data.
-				$app = $this->facebook->api('/'. $feed_id .'?date_format=U');
+				$app = $this->facebook->api('/'. $feed_id .'?date_format=U&locale='. $locale);
 
 				if ( $app ) {
 					$output .= "<p class='fb-page-name'><a href='". $app['link'] ."' title='". $app['name'] ."'>". $app['name'] ."</a></p>\n";

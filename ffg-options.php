@@ -10,6 +10,8 @@ class ffg_admin {
 	// Plugin options set in wordpress
 	protected $options = false;
 	
+	protected $locale_xml = 'https://www.facebook.com/translations/FacebookLocales.xml';
+	
 	function __construct(  ) {
 		global $ffg_setup;
 		
@@ -28,10 +30,10 @@ class ffg_admin {
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function add_menu() {
 		
-		$page = add_options_page('Facebook Feed Grabber Options', 'Facebook Feed Grabber', 'manage_options', __file__, array(&$this, 'options_page'));
+		$page = add_options_page('Facebook Feed Grabber Options', 'Facebook Feed Grabber', 'manage_options', __file__, array($this, 'options_page'));
 
-		add_action( "admin_print_scripts-". $page, array(&$this, 'javascript') );
-		add_action( "admin_print_styles-". $page, array(&$this, 'css') );
+		add_action( "admin_print_scripts-". $page, array($this, 'javascript') );
+		add_action( "admin_print_styles-". $page, array($this, 'css') );
 	}
 	// End add_menu()
 	
@@ -44,28 +46,29 @@ class ffg_admin {
 	function settings_api_init() {
 		
 		
-		register_setting( 'facebook-feed-grabber', 'ffg_options', array(&$this, 'validate_options') ); 
+		register_setting( 'facebook-feed-grabber', 'ffg_options', array($this, 'validate_options') ); 
 
 		// App ID & Secret
-		add_settings_section('fb_app_info', __('Facebook App ID & Secret'), array(&$this, 'setting_section_callback_function'), __file__);
+		add_settings_section('fb_app_info', __('Facebook App ID & Secret'), array($this, 'setting_section_callback_function'), __file__);
 		// - -
-		add_settings_field('ffg_app_id', __('App ID'), array(&$this, 'app_id_field'), __file__, 'fb_app_info');
-		add_settings_field('ffg_secret', __('App Secret'), array(&$this, 'secret_field'), __FILE__, 'fb_app_info');
-		add_settings_field('ffg_verify', __('Verify App Id & Secret'), array(&$this, 'verify_button'), __FILE__, 'fb_app_info');
+		add_settings_field('ffg_app_id', __('App ID'), array($this, 'app_id_field'), __file__, 'fb_app_info');
+		add_settings_field('ffg_secret', __('App Secret'), array($this, 'secret_field'), __FILE__, 'fb_app_info');
+		add_settings_field('ffg_verify', __('Verify App Id & Secret'), array($this, 'verify_button'), __FILE__, 'fb_app_info');
 
 		// Misc Settings
-		add_settings_section('misc_settings', __('Misc Settings'), array(&$this, 'setting_section_callback_function'), __file__);
+		add_settings_section('misc_settings', __('Misc Settings'), array($this, 'setting_section_callback_function'), __file__);
 		// - -
-		add_settings_field('ffg_default_feed', __('Default Feed'), array(&$this, 'default_feed_field'), __file__, 'misc_settings');
-		add_settings_field('ffg_num_entries', __('Number of Entries'), array(&$this, 'num_entries_field'), __file__, 'misc_settings');
-		add_settings_field('ffg_proxy_url', __('Proxy URL'), array(&$this, 'proxy_url_field'),
+		add_settings_field('ffg_default_feed', __('Default Feed'), array($this, 'default_feed_field'), __file__, 'misc_settings');
+		add_settings_field('ffg_num_entries', __('Number of Entries'), array($this, 'num_entries_field'), __file__, 'misc_settings');
+		add_settings_field('ffg_locale', __('Localization'), array($this, 'locale_select'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_proxy_url', __('Proxy URL'), array($this, 'proxy_url_field'),
 		__file__, 'misc_settings');
-		add_settings_field('ffg_cache_feed', __('Cache Feed'), array(&$this, 'cache_feed_select'), __FILE__, 'misc_settings');
-		add_settings_field('ffg_show_title', __('Show Title'), array(&$this, 'show_title_checkbox'), __FILE__, 'misc_settings');
-		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array(&$this, 'limit_checkbox'), __FILE__, 'misc_settings');
-		add_settings_field('ffg_show_thumbnails', __('Show Thumbnails'), array(&$this, 'show_thumbnails_checkbox'), __FILE__, 'misc_settings' );
-		add_settings_field('ffg_style_sheet', __('Styles Sheet'), array(&$this, 'style_sheet_radio'), __FILE__, 'misc_settings');
-		add_settings_field('delete_options', __('Delete Options on Deactivation'), array(&$this, 'delete_options_checkbox'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_cache_feed', __('Cache Feed'), array($this, 'cache_feed_select'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_show_title', __('Show Title'), array($this, 'show_title_checkbox'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array($this, 'limit_checkbox'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_show_thumbnails', __('Show Thumbnails'), array($this, 'show_thumbnails_checkbox'), __FILE__, 'misc_settings' );
+		add_settings_field('ffg_style_sheet', __('Styles Sheet'), array($this, 'style_sheet_radio'), __FILE__, 'misc_settings');
+		add_settings_field('delete_options', __('Delete Options on Deactivation'), array($this, 'delete_options_checkbox'), __FILE__, 'misc_settings');
 			
 	}
 	// End settings_api_init()
@@ -231,6 +234,38 @@ class ffg_admin {
 	
 	
 	/* - - - - - -
+		
+		Show locale select box.
+		
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	function locale_select() {
+		
+		if( !  ini_get('allow_url_fopen') ) {
+			echo "<span class='error'>To use this feature PHP's allow_url_fopen must be enabled.</span>\n";
+			return 0;
+		}
+		
+		$locale = simplexml_load_file($this->locale_xml);
+		?>
+		<select name="ffg_options[locale]">
+			<?php
+			foreach ($locale as $value) {
+				if ( $this->options['locale'] == $value->codes->code->standard->representation )
+					$select = " selected='selected'";
+				else
+					$select = null;
+					
+				echo "<option value='". $value->codes->code->standard->representation ."'$select>". $value->englishName ."</option>\n";
+			}
+			?>
+		</select>
+		<span class="description"><?php _e('Select a language.') ?></span>
+		
+		<?php
+	}
+	
+	
+	/* - - - - - -
 	
 		Proxy URL field
 		
@@ -284,6 +319,7 @@ class ffg_admin {
 		}
 			
 	}
+	
 	
 	/* - - - - - -
 		
@@ -470,6 +506,7 @@ class ffg_admin {
 		// Misc Settigns
 		$input['default_feed'] = ctype_digit($input['default_feed']) !== false ? $input['default_feed'] : null;
 		$input['num_entries'] = intval($input['num_entries']);
+		$input['locale'] = trim($input['locale']);
 		$input['proxy_url'] = trim($input['proxy_url']);
 		$input['cache_feed'] = intval($input['cache_feed']);
 		$input['show_title'] = ( isset($input['show_title']) ) ? 1 : 0;
@@ -509,7 +546,7 @@ class ffg_admin {
 
 // Hook stuff in.
 $ffg_admin = new ffg_admin();
-add_action('admin_menu', array(&$ffg_admin, 'add_menu'));
-add_action('wp_ajax_ffg_verif_app_cred', array(&$ffg_admin, 'verif_app_cred'));
-add_action('admin_init', array(&$ffg_admin, 'settings_api_init'));
+add_action('admin_menu', array($ffg_admin, 'add_menu'));
+add_action('wp_ajax_ffg_verif_app_cred', array($ffg_admin, 'verif_app_cred'));
+add_action('admin_init', array($ffg_admin, 'settings_api_init'));
 ?>
