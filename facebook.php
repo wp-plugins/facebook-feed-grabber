@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Allows you to display the feed of a public page or profile on your website. Requires that you create a Facebook Application. Only works with profiles that have public content. To set your App ID & Secret as well as other settings go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.8.2
+Version: 0.9 Beta
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
 License: GPLv2 or Later
@@ -42,10 +42,13 @@ class ffg_setup {
 	
 
 	// Current plugin version
-	protected $version = '0.8.2';
+	protected $version = '0.9';
 	
 	// For the defaults. (Look in $this->__construct())
 	public $defaults = false;
+	
+	// The plugin options. (Not loaded till $this->get_options() is run)
+	public $options = false;
 	
 	// Will be true if the SDK has been loaded.
 	private $sdk_loaded = false;
@@ -110,7 +113,9 @@ class ffg_setup {
 		
 		// If the defined settings aren't for this version add any new settings.
 		} else if ( $options['version'] != $this->version) {
+			
 			$options = array_merge($this->defaults, $options);
+			
 		}
 		
 		$options['version'] = $this->version;
@@ -175,6 +180,46 @@ class ffg_setup {
 		return true;
 	}
 
+	
+	/**
+	 * Get's the plugin options.
+	 * 	(Set up in case we end up with more then one panel in the future)
+	 *
+	 * @return Array
+	 **/
+	public function get_options( $set = 'ffg_options' ) {
+		static $options = array();
+
+		if ( array_key_exists($set, $options) )
+			return $options[$set];
+
+		$optionSet = get_option( $set );
+		$optionSet = array_merge($this->defaults, $optionSet); 
+
+		// See if we need to upgrade the options.
+		if ( version_compare($optionSet['version'], $this->version) )
+			$this->upgrade($set, $optionSet);
+
+		$options[$set] = $optionSet;
+
+		return $optionSet;
+
+	} // End function get_options
+	
+	
+	/**
+	 * Upgrade the options.
+	 *
+	 * @return void
+	 **/
+	function upgrade( $set, $options ) {
+		
+		$options['version'] = $this->version;
+		
+		update_option($set, $options);
+	} // End function upgrade
+	
+	
 }// End class ffg_setup
 
 // On activation or deactivation
@@ -243,10 +288,11 @@ class ffg {
 
 		Fetches facebook app_id and secret and makes a new connection.
 
-	- - - - - - - - - - - - - -3 - - - - - - - - - - - - - - - - - - */
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function __construct( $appId = null, $secret = null ) {
+		global $ffg_setup;
 		
-		$this->options = get_option('ffg_options');
+		$this->options = $ffg_setup->get_options();
 		
 		// See if we're getting the default App Id.
 		if ( $appId == null )
@@ -470,7 +516,7 @@ class ffg {
 				  'show_thumbnails' => $this->options['show_thumbnails'],
 
 				~ The maximum number of items to display.
-				  'maxitems' => $this->options['num_entries'],
+				  'num_entries' => $this->options['num_entries'],
 				
 			),
 
@@ -496,7 +542,6 @@ class ffg {
 		// Default arguments
 		$defaults = array(
 			'cache_feed' => $this->options['cache_feed'],
-			'num_entries' => '2',
 			'locale' => $this->options['locale'],
 			'container' => 'div',
 			'container_class' => 'fb-feed',
@@ -505,9 +550,9 @@ class ffg {
 			'limit' => $this->options['limit'],
 			'show_title' => $this->options['show_title'],
 			'show_thumbnails' => $this->options['show_thumbnails'],
-			'maxitems' => $this->options['num_entries'],
+			'num_entries' => $this->options['num_entries'],
 		);
-
+		
 		// Overwrite the defaults and exract our arguments.
 		extract( array_merge($defaults, $args) );
 		
@@ -721,7 +766,7 @@ class ffg {
 				$count++;
 
 				// If we reached our limit
-				if( $count == $maxitems)
+				if( $count == $num_entries)
 					break;
 
 			}// End foreach

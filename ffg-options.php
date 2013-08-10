@@ -16,7 +16,7 @@ class ffg_admin {
 		global $ffg_setup;
 		
 		if ( is_array($ffg_setup->defaults) )
-			$this->options = array_merge($ffg_setup->defaults, get_option('ffg_options'));
+			$this->options = array_merge($ffg_setup->defaults, $ffg_setup->get_options());
 		else
 			$this->options = get_option('ffg_options');
 	}
@@ -86,7 +86,7 @@ class ffg_admin {
 		 $plugin_url = trailingslashit( get_bloginfo('wpurl') ).PLUGINDIR.'/'. dirname( plugin_basename(__FILE__) );
 
 		// Include our scripts.
-		wp_enqueue_script('ffg_options', $plugin_url .'/options.js', array('jquery'));
+		wp_enqueue_script('ffg_options', $plugin_url .'/js/ffg-options.js', array('jquery'));
 
 		// We need to feed some stuff to our script
 		// This allows us to pass PHP variables to the Javascript code. We can pass multiple vars in the array.
@@ -110,7 +110,7 @@ class ffg_admin {
 		?>
 		<style type="text/css" media="screen">
 			.icon {
-				margin: 0px 6px 0px 5px;
+				margin: 0px 6px 2px 5px;
 				vertical-align: middle;
 			}
 		</style>
@@ -240,12 +240,22 @@ class ffg_admin {
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 	function locale_select() {
 		
-		if( !  ini_get('allow_url_fopen') ) {
-			echo "<span class='error'>To use this feature PHP's allow_url_fopen must be enabled.</span>\n";
+		if ( !function_exists('curl_init') ) {
+			echo "<span class='error'>To use this feature you must have the PHP CURL extension installed.</span>\n";
 			return 0;
 		}
 		
-		$locale = simplexml_load_file($this->locale_xml);
+	    $localeCon = curl_init( $this->locale_xml );
+		
+	    // Return the output from the cURL session rather than displaying in the browser.
+	    curl_setopt($localeCon, CURLOPT_RETURNTRANSFER, 1);
+
+	    //Execute the session, returning the results to $definition, and close.
+	    $local_xml = curl_exec($localeCon);
+	
+	    curl_close($localeCon);
+	
+		$locale = simplexml_load_string($local_xml);
 		?>
 		<select name="ffg_options[locale]">
 			<?php
@@ -441,26 +451,36 @@ class ffg_admin {
 		global $ffg_setup;
 		$ffg_setup->load_sdk();
 		
-		// Try to make the connection
-		$facebook = new Facebook(array(
-			  'appId'  => $result['app_id'],
-			  'secret' => $result['secret']
-			));
-
+		try {
+			// Try to make the connection
+			$facebook = new Facebook(array(
+				  'appId'  => $result['app_id'],
+				  'secret' => $result['secret']
+				));
+		} catch (FacebookApiException $e) {
+			echo 'Invalid';
+			die();
+		}
+		
 		// If it couldn't connect…
 		if ( !$facebook ) {
 			echo 'Invalid';
 			die();
 		}
-
-		// This call will always work since we are fetching public data.
-		$app = $facebook->api('/'. $result['app_id'] .'?date_format=U');
-
-		if ( $app ) {
-			echo 'Name: '. $app['name'];
-		} else {
-			echo 'Invalid';
+		
+		try {
+			// This call will always work since we are fetching public data.
+			$app = $facebook->api('/'. $result['app_id'] .'?date_format=U');
+		} catch (FacebookApiException $e) {
+			if ( $e->getType() == "OAuthException" )
+				echo "Invalid";
+			die();
 		}
+
+		if ( $app )
+			echo __('Name') .': '. $app['name'];
+		else
+			echo 'Invalid';
 
 		die(); // this is required to return a proper result
 	}

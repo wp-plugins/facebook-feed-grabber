@@ -2,8 +2,8 @@
 Contributors: bonnerl
 Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
-Requires at least: 2.8
-Tested up to: 3.5.1
+Requires at least: 3.3
+Tested up to: 3.6
 Stable tag: 0.8.2
 License: GPLv2 or Later
 
@@ -121,6 +121,12 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Changelog ==
 
+= 0.9 =
+* Improved Widget feed control. 
+* Changed the locale option to retrieve a list of locales via CURL instead of allow_url_fopen.
+* Improved App credential validation.
+* Improved options upgradability.
+
 = 0.8.2 =
 * Removed call time pass-by-reference for compatibility with PHP 5.4.
 * Add Localization. (Beta)
@@ -185,6 +191,10 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Upgrade Notice ==
 
+= 0.9 =
+* Improved the amount of control a widget has over the feed it displays.
+* Changed the locale option to retrieve a list of locales via CURL instead of allow_url_fopen.
+
 = 0.8.2 =
 * Removed call time pass-by-reference for compatibility with PHP 5.4.
 * Add Localization. (Beta)
@@ -226,7 +236,8 @@ My apologies to those who jumped on 0.5 only to find see bug and upgrade again v
 == Next Version ==
 
 In no particular order,
+
 * Add a "like" button.
-* Add more customization ability to the widget.
 * Add ability to load the feed via javascript.
 * Add oEmbed support maybe?
+* Add more styling support.

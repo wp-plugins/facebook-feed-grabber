@@ -36,7 +36,7 @@ jQuery(document).ready(function($) {
 		jQuery.post(ajaxurl, data, function(response) {
 
 			// if invalid 
-			if ( response.search('/Fatal error/') != '-1' ) {
+			if ( response.search('Invalid') != '-1' ) {
 				
 				v_span
 					.empty()
