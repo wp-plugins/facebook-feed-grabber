@@ -33,220 +33,32 @@ License: GPLv2 or Later
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* - - - - - -
-	
-	Class containing plugin setup and deactivation stuff.
-	
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-class ffg_setup {
-	
+/**
+ * Run the settup stuff for the plugin.	
+ */
+include_once 'ffg-setup.php';
 
-	// Current plugin version
-	protected $version = '0.9';
-	
-	// For the defaults. (Look in $this->__construct())
-	public $defaults = false;
-	
-	// The plugin options. (Not loaded till $this->get_options() is run)
-	public $options = false;
-	
-	// Will be true if the SDK has been loaded.
-	private $sdk_loaded = false;
-	
-
-	/* - - - - - -
-		
-		Set the default settings.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function __construct(  ) {
-		
-				
-		// The defaults
-		$this->defaults = array(
-			// Facebook App ID & Secret
-			'app_id' => null,
-			'secret' => null,
-		
-			// Misc Settings
-			'default_feed' => null,
-			'show_title' => 1,
-			'cache_feed' => 5,
-			'cache_folder' => WP_CONTENT_DIR. '/uploads/cache/',
-			'num_entries' => 3,
-			'locale' => 'en_US',
-			'proxy_url' => null,
-			'limit' => 1,
-			'show_thumbnails' => 1,
-			'style_sheet' => 'style.css',
-			'delete_options' => 0,
-		
-			// Current Version
-			'version' => $this->version
-		);
-		
-		if ( ! wp_mkdir_p($this->defaults['cache_folder']) ) {
-			$this->defaults['cache_feed'] = 0;
-			
-			// Tell wp of the error (wp 3+)
-			if ( function_exists('add_settings_error') )
-				add_settings_error( 'ffg_cache_folder', 'cache-folder', __('We were unable to create directory '. $this->defaults['cache_folder'] .' which would be used for caching the feed to reduce page load time. Check to see if it\'s parent directory writable by the server?') );
-		}
-		
-	}
-	
-	
-	/* - - - - - -
-		
-		Define default options
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function activate() {
-	
-		// Get stored plugin options
-		$options = get_option('ffg_options');
-				
-		// If there aren't already settings defined then set the defaults.
-	    if( !is_array($options) ) {
-		
-			$options = $this->defaults;
-		
-		// If the defined settings aren't for this version add any new settings.
-		} else if ( $options['version'] != $this->version) {
-			
-			$options = array_merge($this->defaults, $options);
-			
-		}
-		
-		$options['version'] = $this->version;
-	
-		update_option('ffg_options', $options);
-	}
-
-	
-	/* - - - - - -
-		
-		Delete ffg options if 'restore_defaults' is true
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function deactivate(  ) {
-	
-		$options = get_option('ffg_options');
-	
-		if ( $options['delete_options'] )
-			delete_option('ffg_options');
-	
-	}
-	
-	
-	/* - - - - - -
-		
-		Starts a session if it isn't already done.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function sessionStart() {
-	    if( !session_id() )
-			session_start();
-	}
-	
-	
-	/* - - - - - -
-		
-		Destroy the session.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function sessionDestroy() {
-	    session_destroy();
-	}
-	
-	
-	/* - - - - - -
-		
-		loads facebook SDK
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function load_sdk() {
-		
-		if ( $this->sdk_loaded )
-			return true;
-		
-		// 
-		// Get the facebook sdk
-		if ( ! class_exists('Facebook') )
-			require_once 'facebook-sdk/facebook.php';
-		
-		$this->sdk_loaded = true;
-		
-		return true;
-	}
-
-	
-	/**
-	 * Get's the plugin options.
-	 * 	(Set up in case we end up with more then one panel in the future)
-	 *
-	 * @return Array
-	 **/
-	public function get_options( $set = 'ffg_options' ) {
-		static $options = array();
-
-		if ( array_key_exists($set, $options) )
-			return $options[$set];
-
-		$optionSet = get_option( $set );
-		$optionSet = array_merge($this->defaults, $optionSet); 
-
-		// See if we need to upgrade the options.
-		if ( version_compare($optionSet['version'], $this->version) )
-			$this->upgrade($set, $optionSet);
-
-		$options[$set] = $optionSet;
-
-		return $optionSet;
-
-	} // End function get_options
-	
-	
-	/**
-	 * Upgrade the options.
-	 *
-	 * @return void
-	 **/
-	function upgrade( $set, $options ) {
-		
-		$options['version'] = $this->version;
-		
-		update_option($set, $options);
-	} // End function upgrade
-	
-	
-}// End class ffg_setup
-
-// On activation or deactivation
-$ffg_setup = new ffg_setup();
-register_activation_hook(__FILE__, array($ffg_setup, 'activate'));
-register_deactivation_hook(__FILE__, array($ffg_setup, 'deactivate'));
-
-
-// The Facebook PHP SDK uses sessions. Lets hook in session start and stop functionality.
-add_action('init', array($ffg_setup, 'sessionStart'), 1);
-add_action('wp_logout', array($ffg_setup, 'sessionDestroy'));
-add_action('wp_login', array($ffg_setup, 'sessionDestroy'));
-
-
-// 
-// Get the options page stuff if in the admin area.
+/**
+ * Get the ffg options page stuff if in the admin area.
+ */
 if ( is_admin() )
-	include 'ffg-options.php';
+	include_once 'ffg-options.php';
 
-// Hook in widgets.
+/**
+ * Hook in ffg widgets.
+ */
 include_once 'ffg-widgets.php';
 
-/* - - - - - -
- 
- A class to display a wordpress feed.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/**
+ * A class to display a wordpress feed.
+ * 
+ * @global object The ffg setup object.
+ * 
+ * @param string $appId Optional. The App ID to use.
+ * @param string $secret Optional. The App Secret to use.
+ * 
+ * @return boolean True if connected to Facebook.
+ */
 class ffg {
 	
 	/* - - - Beginning of settings - - - */
@@ -479,6 +291,7 @@ class ffg {
 	}
 	// End validate_feed()
 	
+
 	/* - - - - - -
 
 		Retrieves a public page's news feed and by default echos it.
@@ -627,12 +440,12 @@ class ffg {
 
 				// Get the description of item or the message of the one who posted the item
 				$message = isset($item['message']) ? trim($item['message']) : null;
-				$message = preg_replace('/\n/', '<br />', $message);
+				$message = preg_replace(array('{\b((https?|ftp)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[a-zA-Z0-9+&@#/%=~_|])}', '/\n/'), array("<a href='$1'>\\1</a>", '<br />'), $message);
 
 				// Get the description of item or the message of the one who posted the item
 				$descript = isset($item['description']) ? trim($item['description']) : null;
 				// Turn urls into links and replace new lines with <br />
-				$descript = preg_replace(array('/((http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}\/\S*)/', '/\n/'), array("<a href='$1'>\\1</a>", '<br />'), $descript);
+				$descript = preg_replace(array('{\b((https?|ftp)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[a-zA-Z0-9+&@#/%=~_|])}', '/\n/'), array("<a href='$1'>\\1</a>", '<br />'), $descript);
 				
 				// Get the description of item or the message of the one who posted the item
 				$story = isset($item['story']) ? trim($item['story']) : null;

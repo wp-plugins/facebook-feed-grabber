@@ -123,9 +123,12 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 = 0.9 =
 * Improved Widget feed control. 
+* Fixed failure to turn urls into clickable links in post message.
 * Changed the locale option to retrieve a list of locales via CURL instead of allow_url_fopen.
 * Improved App credential validation.
 * Improved options upgradability.
+* Moved ffg setup class and hooks to it's own file (ffg-setup.php).
+* Improved some inline documentation to better match the WP PHPDoc standards.
 
 = 0.8.2 =
 * Removed call time pass-by-reference for compatibility with PHP 5.4.
@@ -193,6 +196,7 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 = 0.9 =
 * Improved the amount of control a widget has over the feed it displays.
+* Fixed failure to turn urls into clickable links in post message.
 * Changed the locale option to retrieve a list of locales via CURL instead of allow_url_fopen.
 
 = 0.8.2 =
