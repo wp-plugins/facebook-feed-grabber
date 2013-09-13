@@ -1,0 +1,63 @@
+#fb-feed {
+	padding: 1px 5px;
+}
+#fb-feed p {
+	font-size: 100%;
+	margin: 4px 0px;
+	padding: 0px;
+}
+#fb-feed p.fb-page-name {
+	/* The facebook icon has been shared by WPZOOM Social Networking Icon Set by WPZOOM under the Creative Commons Attribution-Share Alike 3.0 Unported License. http://www.wpzoom.com */
+	background: url('images/facebook.png') no-repeat scroll left center;
+	font-size: 125%;
+	font-weight: bold;
+	line-height: 125%;
+	margin-top: 8px;
+	min-height: 30px;
+	padding-left: 30px;
+	text-align: left;
+}
+#fb-feed .fb-feed-item {
+	border-top: 1px dotted;
+	margin: 8px 0px;
+	padding-top: 5px;
+}
+#fb-feed .fb-feed-item:first-child {
+	border: 0px;
+	margin-top: 4px;
+}
+#fb-feed .fb-feed-item p.message,
+#fb-feed .fb-feed-item p.story {
+	margin-top: 4px;
+	text-align: left;
+}
+#fb-feed .fb-feed-item blockquote {
+	border-left: 2px solid #7F7F7F;
+    margin: 10px 0 0;
+	overflow: auto;
+    padding: 4px 0px 4px 10px;
+	text-align: left;
+}
+.fb-feed-item blockquote img.alignleft {
+    margin: 0px 10px 10px 0px;
+	max-width: 33%;
+}
+#fb-feed .fb-feed-item blockquote a.the_link {
+	display: block;
+	margin-bottom: 8px;
+}
+.fb-feed-item blockquote p.caption {
+	font-size: 0.9em;
+	margin: -15px 0px 0px;
+}
+.fb-feed-item blockquote p.caption,
+.fb-feed-item blockquote p.caption a {
+	color: #4D4D4D;
+}
+#fb-feed .fb-feed-item blockquote p {
+	text-align: left;
+}
+#fb-feed .fb-feed-item span.descript {
+}
+#fb-feed .fb-feed-item .fb-date {
+}
