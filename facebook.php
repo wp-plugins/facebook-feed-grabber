@@ -329,7 +329,7 @@ function ffg_add_style() {
 	$style_url = plugins_url($options['style_sheet'], __FILE__);
 
 	// Tell wp to use the stylesheet.
-	wp_register_style('ffg_style', $style_url);
+	wp_register_style('ffg_style', $style_url, array(), FFG_VERSION);
 	wp_enqueue_style( 'ffg_style');
 
 }

@@ -45,24 +45,26 @@ class ffg_admin extends ffg_base
 
 		// App ID & Secret
 		add_settings_section('fb_app_info', __('Facebook App ID & Secret'), array($this, 'setting_section_callback_function'), __file__);
-		// - -
+
 		add_settings_field('ffg_app_id', __('App ID'), array($this, 'app_id_field'), __file__, 'fb_app_info');
 		add_settings_field('ffg_secret', __('App Secret'), array($this, 'secret_field'), __FILE__, 'fb_app_info');
 		add_settings_field('ffg_verify', __('Verify App Id & Secret'), array($this, 'verify_button'), __FILE__, 'fb_app_info');
 
+		// Default Feed Settings
+		add_settings_section('default_feed', __('Default Feed'), array($this, 'setting_section_callback_function'), __file__);
+
+		add_settings_field('ffg_default_feed', __('Default Feed'), array($this, 'default_feed_field'), __file__, 'default_feed');
+		add_settings_field('ffg_num_entries', __('Number of Entries'), array($this, 'num_entries_field'), __file__, 'default_feed');
+		add_settings_field('ffg_show_title', __('Show Title'), array($this, 'show_title_checkbox'), __FILE__, 'default_feed');
+		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array($this, 'limit_checkbox'), __FILE__, 'default_feed');
+		add_settings_field('ffg_show_thumbnails', __('Show Thumbnails'), array($this, 'show_thumbnails_checkbox'), __FILE__, 'default_feed' );
+
 		// Misc Settings
 		add_settings_section('misc_settings', __('Misc Settings'), array($this, 'setting_section_callback_function'), __file__);
-		// - -
-		add_settings_field('ffg_default_feed', __('Default Feed'), array($this, 'default_feed_field'), __file__, 'misc_settings');
-		add_settings_field('ffg_num_entries', __('Number of Entries'), array($this, 'num_entries_field'), __file__, 'misc_settings');
-		add_settings_field('ffg_locale', __('Localization'), array($this, 'locale_select'), __FILE__, 'misc_settings');
-		add_settings_field('ffg_proxy_url', __('Proxy URL'), array($this, 'proxy_url_field'),
-		__file__, 'misc_settings');
 		add_settings_field('ffg_cache_feed', __('Cache Feed'), array($this, 'cache_feed_select'), __FILE__, 'misc_settings');
-		add_settings_field('ffg_show_title', __('Show Title'), array($this, 'show_title_checkbox'), __FILE__, 'misc_settings');
-		add_settings_field('ffg_limit', __('Limit to Posts From Feed'), array($this, 'limit_checkbox'), __FILE__, 'misc_settings');
-		add_settings_field('ffg_show_thumbnails', __('Show Thumbnails'), array($this, 'show_thumbnails_checkbox'), __FILE__, 'misc_settings' );
-		add_settings_field('ffg_style_sheet', __('Styles Sheet'), array($this, 'style_sheet_radio'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_locale', __('Localization'), array($this, 'locale_select'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_style_sheet', __('Style Sheet'), array($this, 'style_sheet_radio'), __FILE__, 'misc_settings');
+		add_settings_field('ffg_proxy_url', __('Proxy URL'), array($this, 'proxy_url_field'), __file__, 'misc_settings');
 		add_settings_field('delete_options', __('Delete Options on Deactivation'), array($this, 'delete_options_checkbox'), __FILE__, 'misc_settings');
 			
 	}
@@ -123,6 +125,10 @@ class ffg_admin extends ffg_base
 		switch ( $section['id'] ) {
 			case 'fb_app_info':
 				_e("<p>You will need a facebook App ID and Secret key. To get them you must register as a developer and create an application, which you can do from their <a href='https://developers.facebook.com/setup'>Create an App</a> page.</p>");
+				break;
+
+			case 'default_feed':
+				_e("<p>The default settings for used for displaying a feed. These can be overridden when displaying a feed from a widget or shortcode.</p>");
 				break;
 
 			case 'misc_settings':
@@ -306,13 +312,13 @@ class ffg_admin extends ffg_base
 			
 		?>
 		<select name="ffg_options[cache_feed]">
-			<option value="0"<?php echo $this->options['cache_feed'] == 0 ? ' selected="selected"' : ''; ?>>False</option>
-			<option value="5"<?php echo $this->options['cache_feed'] == 5 ? ' selected="selected"' : ''; ?>>5 Minute</option>
-			<option value="10"<?php echo $this->options['cache_feed'] == 10 ? ' selected="selected"' : ''; ?>>10 Minute</option>
-			<option value="15"<?php echo $this->options['cache_feed'] == 15 ? ' selected="selected"' : ''; ?>>15 Minute</option>
-			<option value="30"<?php echo $this->options['cache_feed'] == 30 ? ' selected="selected"' : ''; ?>>30 Minute</option>
-			<option value="45"<?php echo $this->options['cache_feed'] == 45 ? ' selected="selected"' : ''; ?>>45 Minute</option>
-			<option value="60"<?php echo $this->options['cache_feed'] == 60 ? ' selected="selected"' : ''; ?>>60 Minute</option>
+			<option value="0"<?php echo $this->options['cache_feed'] == 0 ? ' selected="selected"' : ''; ?>><?php _e("Don't Cache") ?></option>
+			<option value="5"<?php echo $this->options['cache_feed'] == 5 ? ' selected="selected"' : ''; ?>><?php _e('5 Minute') ?></option>
+			<option value="10"<?php echo $this->options['cache_feed'] == 10 ? ' selected="selected"' : ''; ?>><?php _e( '10 Minute') ?></option>
+			<option value="15"<?php echo $this->options['cache_feed'] == 15 ? ' selected="selected"' : ''; ?>><?php _e('15 Minute') ?></option>
+			<option value="30"<?php echo $this->options['cache_feed'] == 30 ? ' selected="selected"' : ''; ?>><?php _e('30 Minute') ?></option>
+			<option value="45"<?php echo $this->options['cache_feed'] == 45 ? ' selected="selected"' : ''; ?>><?php _e('45 Minute') ?></option>
+			<option value="60"<?php echo $this->options['cache_feed'] == 60 ? ' selected="selected"' : ''; ?>><?php _e('60 Minute') ?></option>
 			
 		</select>
 		<span class="description"><?php _e('How long to cache feeds before refreshing them.') ?></span>
@@ -386,8 +392,8 @@ class ffg_admin extends ffg_base
 		?>
 		<fieldset>
 			<legend class="screen-reader-text"><span>Date Format</span></legend>
-			<label><input type="radio"<?php echo ( !isset($this->options['style_sheet']) || $this->options['style_sheet'] == 'style.css' ) ? 'checked="checked"' : null; ?> value="style.css" name="ffg_options[style_sheet]"> <span>Use Default Style Sheet</span></label><br />
-			<label><input type="radio"<?php echo (  $this->options['style_sheet'] == 'style-2.css' ) ? 'checked="checked"' : null; ?> value="style-2.css" name="ffg_options[style_sheet]"> <span>Use Secondary Style Sheet</span> <span class="description"><?php _e('More specific in it\'s declarations than the default. (Requires container to have an id of "fb-feed".)') ?></span></label><br />
+			<label><input type="radio"<?php echo ( !isset($this->options['style_sheet']) || $this->options['style_sheet'] == 'style.css' ) ? 'checked="checked"' : null; ?> value="style.css" name="ffg_options[style_sheet]"> <span>Use Default Style Sheet</span> <span class="description"><?php _e('Font color and size will be based on the theme\'s style rules for the current context.') ?></span></label><br />
+			<label><input type="radio"<?php echo (  $this->options['style_sheet'] == 'style-2.css' ) ? 'checked="checked"' : null; ?> value="style-2.css" name="ffg_options[style_sheet]"> <span>Use Secondary Style Sheet</span> <span class="description"><?php _e('This one is more specific in it\'s declarations than the default. It requires the feed container to have an id of "fb-feed".') ?></span></label><br />
 			<label><input type="radio"<?php echo ( $this->options['style_sheet'] == false ) ? 'checked="checked"' : null; ?> value="0" name="ffg_options[style_sheet]"> <span>I'll Define My Own Styles.</span></label><br />
 		</fieldset>
 		<?php
@@ -498,9 +504,8 @@ class ffg_admin extends ffg_base
 
 			$input['app_id'] = null;
 
-			// Tell wp of the error (wp 3+)
-			if ( function_exists('add_settings_error') )
-				add_settings_error( 'ffg_app_id', 'app-id', __('You do not appear to have provided a valid App Id for your Facebook Application.') );
+			// Tell wp of the error
+			add_settings_error( 'ffg_app_id', 'app-id', __('You do not appear to have provided a valid App Id for your Facebook Application.') );
 
 		} else
 			$input['app_id'] = trim($input['app_id']);
@@ -510,9 +515,8 @@ class ffg_admin extends ffg_base
 
 			$input['secret'] = null;		
 
-			// Tell wp of the error (wp 3+)
-			if ( function_exists('add_settings_error') )
-				add_settings_error( 'ffg_secret', 'secret', __('You do not appear to have proivided a valid Secret for your Facebook Application.') );
+			// Tell wp of the error
+			add_settings_error( 'ffg_secret', 'secret', __('You do not appear to have proivided a valid Secret for your Facebook Application.') );
 
 		} else
 			$input['secret'] = trim($input['secret']);

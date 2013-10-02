@@ -2,8 +2,8 @@
 Contributors: bonnerl
 Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
-Requires at least: 3.3
-Tested up to: 3.6
+Requires at least: 3.0
+Tested up to: 3.6.1
 Stable tag: 0.8.2
 License: GPLv2 or Later
 
