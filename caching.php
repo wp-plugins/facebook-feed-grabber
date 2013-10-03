@@ -168,8 +168,6 @@ class ffg_cache {
 	 * @return boolean Results of it's endeavor. 
 	 */
 	public static function saveCache($file, $content) {
-
-		echo "Folder: '". self::cache_folder() ."'<br />\n"; return false;
 		
 		$cache_file = self::cache_folder() . self::getName($file);
 		

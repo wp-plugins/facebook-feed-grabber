@@ -157,9 +157,10 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Improved App credential validation.
 * Improved options upgradability.
 * Moved ffg setup class and hooks to it's own file (ffg-setup.php).
-* Improved some inline documentation to better match the WP PHPDoc standards.
+* Improved inline documentation to better match the [WP PHP Documentation Standards](http://make.wordpress.org/core/handbook/inline-documentation-standards/php-documentation-standards/#5-inline-comments).
 * Improved the organization of the options.
 * Improved text localization.
+* Changed the ffg_cache class to be based on static methods and properties.
 
 = 0.8.2 =
 * Removed call time pass-by-reference for compatibility with PHP 5.4.

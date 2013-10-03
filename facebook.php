@@ -84,7 +84,8 @@ class ffg extends ffg_base
 		Returns false if it is not a date, if is a date the it returns it in a string that strtotime() will recognize. 
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function is_date( $text ) {
+	function is_date( $text )
+	{
 		
 		// Days for preg_match regular expression
 		$days = "(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)";
@@ -127,7 +128,8 @@ class ffg extends ffg_base
 		Returns false on failure of formated string on success.
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function format_date( $published, $format = 'feed' ) {
+	function format_date( $published, $format = 'feed' )
+	{
 		global $wp_local;
 	
 		switch ( $format ) {
@@ -184,7 +186,8 @@ class ffg extends ffg_base
 		Retrieves a feed ID if given a facebook nickname or validates a feed id if givin a number.
 		
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function validate_feed( $feed ) {
+	function validate_feed( $feed )
+	{
 		
 		// TODO
 		
@@ -235,7 +238,8 @@ class ffg extends ffg_base
 
 
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function feed( $feed_id = null, $args = array()) {
+	function feed( $feed_id = null, $args = array())
+	{
 
 		if ( $this->facebook === false )
 			return false;
@@ -268,10 +272,40 @@ class ffg extends ffg_base
 		
 		// Overwrite the defaults and exract our arguments.
 		extract( array_merge($defaults, $args) );
-		
-		print_r( array_merge($defaults, $args) );
+
+		$path = '/'. $feed_id .'/feed?date_format=U&locale='. $locale;
+
+		$content = $this->fb_content($path, $cache_feed);
+
+		print_r( $content );
 	}
 	// End fb_feed()
+
+	/**
+	 * Get the specified content from Facebook.
+	 * 
+	 * Get the specified content from Facebook making use 
+	 * of caching if enabled.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @return array The content returned from FB.
+	 */
+	public function fb_content( $path, $cache_feed )
+	{
+		// Get the feed (maybe it's cached?)
+		if ( $cache_feed != 0 ) {
+			
+			// Include ffg_cache class
+			include_once 'caching.php';
+			
+			// Let it do it's magic. (Will return the needed content)
+			return ffg_cache::theMagic($this, $path, ($cache_feed * 60));
+			
+		} else
+			return$this->facebook->api($path);
+
+	}
 		
 }
 
@@ -283,7 +317,8 @@ class ffg extends ffg_base
 	and not this function.
 		
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-function fb_feed( $feed_id = null, $args = array() ) {
+function fb_feed( $feed_id = null, $args = array() )
+{
 	
 	$facebook = new ffg();
 	
@@ -299,7 +334,8 @@ function fb_feed( $feed_id = null, $args = array() ) {
 	Add Shortcode tag.
 	
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-function fb_feed_shortcode( $args, $feed_id = null ) {
+function fb_feed_shortcode( $args, $feed_id = null )
+{
 	
 	$args['echo'] = false;
 	
@@ -317,7 +353,8 @@ add_shortcode('fb_feed', 'fb_feed_shortcode');
 	Add default style
 	
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-function ffg_add_style() {
+function ffg_add_style()
+{
 	
 	$options = get_option('ffg_options');
 	
