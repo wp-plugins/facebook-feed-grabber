@@ -14,10 +14,10 @@ class ffg_cache {
 	 * Folder to cache files to.
 	 * 
 	 * @since 0.7
-	 * @access public
+	 * @access private
 	 * @var string The folder to store the cache in.
 	 */
-	public $folder = null;
+	private static $folder = null;
 	
 	/**
 	 * Prefix for file names.
@@ -26,28 +26,40 @@ class ffg_cache {
 	 * @access public
 	 * @var string Prefix for the cache's file names.
 	 */
-	public $prefix = 'ffg-';
+	public static $prefix = 'ffg-';
 	
 	/**
-	 * Instantiate the class.
-	 * 
-	 * Get's the plugin's options and stores the folder.
+	 * Doesn't do anything as of 0.9. 
 	 * 
 	 * @since 0.7
-	 * @return void Doesn't return anything special.
+	 * @return void
 	 */
-	function __construct(  ) {
+	public function __construct(  ) {
+	}
 
-		/*
-			LBTD: Make this use the new options retrieval method.
-		*/
-		
+	/**
+	 * Get the plugin cache folder.
+	 * 
+	 * Get the plugin cache folder with is hidden away in the
+	 * plugin preferences. 
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @return string The cache folder.
+	 */
+	public static function cache_folder() {
+
+		// If we already have the cache folder then return it.
+		if ( self::$folder != null )
+			return self::$folder;
+
 		// Get stored plugin options
-		$options = get_option('ffg_options');
-		
+		$options = 	ffg_base::get_options();
+
 		// Set the cache folder
-		$this->folder = $options['cache_folder'];
-		
+		self::$folder = $options['cache_folder'];
+
+		return self::$folder;
 	}
 	
 	/**
@@ -65,17 +77,17 @@ class ffg_cache {
 	 * 
 	 * @return string The content.
 	 */
-	function theMagic( $fb, $file, $expires ) {
+	public static function theMagic( $fb, $file, $expires ) {
 			
 		// Check if it has already been cached and not expired
 		// If true then we output the cached file contents and finish
-		if ( $this->isCached( $file, $expires ) )
-			return json_decode($this->getCache($file), true);
+		if ( self::isCached( $file, $expires ) )
+			return json_decode(self::getCache($file), true);
 			
 		$content = $fb->facebook->api($file);
 		
 		// Save it to the cache for next time
-		$this->saveCache($file, json_encode($content));
+		self::saveCache($file, json_encode($content));
 		
 		return $content;
 	}
@@ -92,8 +104,8 @@ class ffg_cache {
 	 * 
 	 * @return string The file name to be used for caching.
 	 */
-	function getName( $file ) {
-		return $this->prefix . md5($file) . ".json";
+	public static function getName( $file ) {
+		return self::$prefix . md5($file) . ".json";
 	}
 	
 	
@@ -110,10 +122,10 @@ class ffg_cache {
 	 * 
 	 * @return boolean If file is cached. 
 	 */
-	function isCached( $file, $expires ) {		
+	public static function isCached( $file, $expires ) {		
 		
 		// Get file path/name.
-		$cache_file = $this->folder . $this->getName($file);
+		$cache_file = self::cache_folder() . self::getName($file);
 		
 		// When was the file created.
 		$cachefile_created = ( file_exists($cache_file) ) ? @filemtime($cache_file) : 0;
@@ -134,8 +146,8 @@ class ffg_cache {
 	 * 
 	 * @return string The contents of the cached file.
 	 */
-	function getCache( $file ) {
-		$cache_file = $this->folder . $this->getName($file);
+	public static function getCache( $file ) {
+		$cache_file = self::cache_folder() . self::getName($file);
 		
 		return file_get_contents($cache_file);
 	}
@@ -155,12 +167,14 @@ class ffg_cache {
 	 * 
 	 * @return boolean Results of it's endeavor. 
 	 */
-	function saveCache($file, $content) {
+	public static function saveCache($file, $content) {
+
+		echo "Folder: '". self::cache_folder() ."'<br />\n"; return false;
 		
-		$cache_file = $this->folder . $this->getName($file);
+		$cache_file = self::cache_folder() . self::getName($file);
 		
 		// See if there is a cache folder and that it's writable. 
-		if ( wp_mkdir_p($this->folder) && ( ! file_exists($cache_file) || is_writable($cache_file) ) ) {
+		if ( wp_mkdir_p(self::cache_folder()) && ( ! file_exists($cache_file) || is_writable($cache_file) ) ) {
 		
 			$fp = fopen($cache_file, 'w');
 			$write = fwrite($fp, $content);
