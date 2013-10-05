@@ -74,128 +74,6 @@ class ffg extends ffg_base
 	 */
 	
 	/* - - - - - -
-		
-		Looks to see if $text is a date in one of the following formats,
-			-Tomorrow at 5:00pm
-			-Wednesday at 5:00pm
-			-Wednesday, August 24 at 5:00pm
-			-Wednesday, August 24, 2011 at 5:00pm
-			
-		Returns false if it is not a date, if is a date the it returns it in a string that strtotime() will recognize. 
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function is_date( $text )
-	{
-		
-		// Days for preg_match regular expression
-		$days = "(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)";
-		// Months for preg_match regular expression
-		$months = "(January|February|March|April|May|June|July|August|September|October|November|December)";
-		
-		// 	if ( preg_match([Tomorrow at time], $text) )
-		if ( preg_match("/^Tomorrow at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
-			$date = "Tomorrow {$date[1]}:{$date[2]}{$date[3]}";
-		
-		// if ( preg_match([day at time], $text) )
-		elseif ( preg_match("/^$days at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
-			$date = "{$date[1]} {$date[2]}:{$date[3]}{$date[4]}";
-
-		// if ( preg_match([day, month day at time], $text) )
-		elseif ( preg_match("/^$days, $months ([0-9]|[12][0-9]|3[01]) at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
-			$date = "{$date[2]} {$date[3]} {$date[4]}:{$date[5]}{$date[6]}";
-		
-		
-		// if ( preg_match([day, month day, year at time], $text) )
-		elseif ( preg_match("/^$days, $months ([0-9]|[12][0-9]|3[01]), (20[0-9][0-9]) at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
-			$date = "{$date[2]} {$date[3]}, {$date[4]} {$date[5]}:{$date[6]}{$date[7]}";
-		
-		else
-			return false;
-		
-		return $date;
-		
-	}
-	// End is_date()
-	
-	
-	/* - - - - - -
-		
-		$published = The time to format
-		$format = Defaults to feed which means it'll expect a unix timestamp in the first parameter $published. If set to 'event' it will assume we were fed a string that strtotime() will interpret.
-		
-		Uses the date formats defined in $this->date_formats[$format] for the output.
-		
-		Returns false on failure of formated string on success.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function format_date( $published, $format = 'feed' )
-	{
-		global $wp_local;
-	
-		switch ( $format ) {
-			
-			case 'event':// {
-				
-				$timestamp = strtotime($published);
-
-				// If we couln't make a unix timestamp
-				if ( $timestamp === false )
-					return false;
-				else
-					$published = $timestamp;
-				
-				// Get the date formats
-				$date_formats = $this->date_formats['event'];
-
-				break;
-			// }
-				
-			case 'feed':
-			default:
-			
-				// Get the date formats
-				$date_formats = $this->date_formats['feed'];
-
-				break;
-				
-		}
-		
-		/*
-			LBTD : Make timezone based on if user is logged into facebook and use that timezone?
-		*/
-	
-		// Convert to our wp timezone
-		$published = $published + ( get_option( 'gmt_offset' ) * 3600 );
-		
-		if ( date_i18n('Ymd', $published) == date_i18n('Ymd') )
-			$published = date_i18n( $date_formats['today'], $published );
-			
-		else if ( date_i18n('Y', $published) == date_i18n('Y') )
-			$published = date_i18n( $date_formats['this_year'], $published );
-			
-		else
-			$published = date_i18n( $date_formats['other_year'], $published );
-		
-		return $published;
-	}
-	// End format_date()
-
-	
-	/* - - - - - -
-		
-		Retrieves a feed ID if given a facebook nickname or validates a feed id if givin a number.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function validate_feed( $feed )
-	{
-		
-		// TODO
-		
-	}
-	// End validate_feed()
-	
-
-	/* - - - - - -
 
 		Retrieves a public page's news feed and by default echos it.
 
@@ -238,14 +116,14 @@ class ffg extends ffg_base
 
 
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function feed( $feed_id = null, $args = array())
+	function feed( $feed_id = null, $args = array() )
 	{
 
 		if ( $this->facebook === false )
 			return false;
 
 		// See if we're using the default feed id.
-		if ( $feed_id == null )
+		if ( empty($feed_id) )
 			$feed_id = $this->options['default_feed'];
 
 		// If we still don't have a feed id…
@@ -260,9 +138,10 @@ class ffg extends ffg_base
 		$defaults = array(
 			'cache_feed' => $this->options['cache_feed'],
 			'locale' => $this->options['locale'],
-			'container' => 'div',
-			'container_class' => 'fb-feed',
-			'container_id' => 'fb-feed',
+			/**
+			 * @see $this->container() param $args for container values.
+			 */
+			'container' => array(), 
 			'echo' => true,
 			'limit' => $this->options['limit'],
 			'show_title' => $this->options['show_title'],
@@ -273,40 +152,434 @@ class ffg extends ffg_base
 		// Overwrite the defaults and exract our arguments.
 		extract( array_merge($defaults, $args) );
 
+		// The "path" for the fb content.
 		$path = '/'. $feed_id .'/feed?date_format=U&locale='. $locale;
 
+		// Get the content and use caching if enabled.
 		$content = $this->fb_content($path, $cache_feed);
 
-		print_r( $content );
+		// Our output string.
+		// The container will be added at the end.
+		$output = NULL;
+
+
+		// Count the items as we use them.
+		$count = 0;
+
+
+		// Get the feed title.
+		$output .= $this->the_title($feed_id, $show_title, $cache_feed);
+
+		foreach($content['data'] as $item) {
+
+			if ( $this->skip($item, $limit) )
+				continue;
+
+			// Who posted this status.
+			$from = $this->from($item);
+
+			// Get the message
+			$message = $this->story($item, 'message');
+
+			// Get the description.
+			$descript = $this->story($item, 'description');
+
+			// Get the 'story'
+			$story = $this->story($item, 'story');
+
+			// Get event properties
+			$properties = $this->event_properties($item);
+
+			// Format the date
+			$published = $this->format_date($item['created_time']);
+
+			// Get comment count.
+			$comments = $this->count_comments($item);
+
+			// Get the item url.
+			$item_url = $this->item_url($item);
+
+			// Get the meta paragraph
+			$meta = $this->meta($item_url, $published, $comments);
+
+			$item_output = null;
+
+			// See if we should display who posted it
+			if ( $limit == false )
+				$item_output .= $from;
+
+			// The actual users status
+			if ( $message != null  )
+				$item_output .= $this->container($message, array('name' => 'div', 'class' => 'fb-content'));
+
+			else if ( $story != null )
+				$item_output .= $this->container($story, array('name' => 'div', 'class' => 'fb-content'));
+
+			$item_output .= $this->shared_link($item, $show_thumbnails, $descript, $properties);
+
+			$item_output .= $meta;
+
+			$output .= $this->container($item_output, array('name' => 'article', 'class' => 'fb-feed-item'));
+
+			// Add one to our count tally
+			$count++;
+
+			// If we reached our limit
+			if( $count == $num_entries)
+				break;
+
+		}
+
+		// Set the default container id.
+		$container = array_merge( array('id' => 'fb-feed'), $container );
+
+		// Add a class of our own to the container.
+		$container['class'] = " fb-feed ". $container['class'];
+
+		// Wrap the content with the container.
+		$output = $this->container($output, $container);
+
+		if ( $echo == true ) {
+			echo $output;
+			return true;
+		} else {
+			return $output;
+		}
+
 	}
 	// End fb_feed()
 
 	/**
-	 * Get the specified content from Facebook.
-	 * 
-	 * Get the specified content from Facebook making use 
-	 * of caching if enabled.
+	 * Looks to see if we should skip this item.
 	 * 
 	 * @since 0.9.0
 	 * 
-	 * @return array The content returned from FB.
+	 * @param array $item The item to check.
 	 */
-	public function fb_content( $path, $cache_feed )
+	public function skip($item, $limit)
 	{
-		// Get the feed (maybe it's cached?)
-		if ( $cache_feed != 0 ) {
-			
-			// Include ffg_cache class
-			include_once 'caching.php';
-			
-			// Let it do it's magic. (Will return the needed content)
-			return ffg_cache::theMagic($this, $path, ($cache_feed * 60));
-			
-		} else
-			return$this->facebook->api($path);
+		// If there's nothing there.
+		if ( empty($item) )
+			return true;
+		
+		// If it's just an entry telling about a new friend.
+		if ( isset($item['status_type']) && $item['status_type'] == 'approved_friend' )
+			return true;
 
+		// If it's a photo but not an added photo
+		if ( $item['type'] == 'photo' && ! isset($item['status_type']) )
+			return true;
+
+		// If we're limiting it to posts from the retrieved page
+		if ( $limit == true ) {
+			// If the post isn't posted by the feed author
+			if ( $feed_id != $item['from']['id'] )
+				return true;
+		}
+
+		
+		return false;
+	}
+
+	/**
+	 * Gets the name/title of the user/page the feed belongs to.
+	 * 
+	 * Check to see if we're displaying the name/title of the 
+	 * user/page the feed belongs to gets it.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $feed_id ID of the user/page.
+	 * @param boolean $show_title Are we going to display the title?
+	 * @param int $cache_feed The number of minutes to cache the feed.
+	 * 
+	 * @return string The HTML to output.
+	 */
+	public function the_title( $feed_id, $show_title, $cache_feed )
+	{
+
+		if ( ! $show_title )
+			return null;
+
+		// The "path" for the fb content.
+		$path = '/'. $feed_id .'?date_format=U&locale='. $locale;
+
+		// Get the title and cache it if enabled.
+		// This will be public data.
+		$content = $this->fb_content($path, $cache_feed);
+
+		if ( ! $content )
+			return false;
+
+		// The title in a link.
+		$output = "<a href='". $content['link'] ."' title='". $content['name'] ."'>". $content['name'] ."</a>";
+
+		// Container arguments.
+		$container = array(
+			'name' => 'header', 
+			'class' => 'fb-page-name',
+			);
+
+		$output = $this->container($output, $container);
+		// "<p class='fb-page-name'></p>\n";
+
+		return $output;
+	}
+
+	/**
+	 * Creates a link to author of the status.
+	 *	
+	 * @since 0.9.0
+	 * 
+	 * @param array $item The items to get the author of.
+	 * 
+	 * @return string The HTML output.
+	 */
+	public function from($item)
+	{
+		$container = array(
+			'name' => 'p',
+			'class' => 'fb-from',
+			);
+
+		// The link. 
+		$output = "<a href='http://www.facebook.com/". $item['from']['id'] ."'>". $item['from']['name'] ."</a>";
+
+		// In a paragraph.
+		$output = $this->container($output, $container);
+
+
+		return $output;
+	}
+
+	/**
+	 * Get item story, message, desciption.
+	 * 
+	 * Facebook gives us featured text in either a message, 
+	 * description or story element depending on the type of post.
+	 * This will get the story if it's there find the links and make
+	 * paragraphs and line breaks.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param array $item The item to get the element out of.
+	 * @param string $key The key for the story to get.
+	 * 
+	 * @return string The HTML to output.
+	 */
+	public function story( $item, $key )
+	{
+		// Get the story text if it's there.
+		$output = isset($item[$key]) ? trim($item[$key]) : null;
+
+		if ( $output == null )
+			return null;
+
+		// Find the URLs.
+		$output = $this->find_links($output);
+
+		// Paragraphs and breaks.
+		$output = wpautop( $output );
+
+		return $output;
+	}
+
+	/**
+	 * 
+	 */
+	public function shared_link( $item, $show_thumbnails, $descript, $properties )
+	{
+		// See if there's something like a link or video to show.
+		if ( ! isset($item['link']) && $descript == null && $properties == null )
+			return null;
+
+		$output = null;
+		
+		// The item link
+		if ( isset($item['link']) && isset($item['name']) )
+			$output .= "<a href='". esc_attr($item['link']) ."' class='block-link' target='_blank'>". esc_attr($item['name']) ."</a>\n";
+									
+		$output .= $this->thumbnail($item, $show_thumbnails);
+
+		// The item caption
+		if ( isset($item['caption']) ) {
+			echo "caption";
+
+			if ( preg_match('/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/', $item['caption']) ) {
+				$caption = preg_replace('/^(?!https?:\/\/)/', 'http://', $item['caption']);
+				$caption = "<a href='". esc_attr($caption) ."'>". $item['caption'] ."</a>\n";
+				
+			} else
+				$caption = $item['caption'];
+				
+			$output .= $this->container($caption, array('name' => 'p', 'class' => 'caption'));
+		}							
+		
+		if ( $descript != null || $properties != null ) {
+												
+			if ( $descript != null )
+				$output .= $descript;
+	
+			if ( $properties != null )
+				$output .= $properties;
+						
+		}
+
+		$container = array(
+			'name' => 'blockquote',
+			'class' => null,
+			);
+
+		return $this->container($output, $container);
 	}
 		
+	/**
+	 * Searches text to find urls and make them into hyperlinks.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $haystack The text to search through.
+	 * 
+	 * @return string The HTML to output.
+	 */
+	public function find_links( $haystack )
+	{
+		// Our pattern to find links.
+		$pattern = '{\b((https?|ftp)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[a-zA-Z0-9+&@#/%=~_|])}';
+
+		// The hyperlink to be.
+		$replacement = "<a href='$1'>\\1</a>";
+
+		// Find the links.
+		$output = preg_replace($pattern, $replacement, $haystack);
+
+		return $output;
+	}
+
+	/**
+	 * 
+	 */
+	public function thumbnail( $item, $show_thumbnails )
+	{
+		if ( ! $show_thumbnails || ! isset($item['picture']) )
+			return null;
+
+		$output = "<img src='". esc_attr($item['picture']) ."' class='thumbnail alignleft' />\n";
+
+		if ( isset($item['link']) )
+			$output = "<a href='". esc_attr($item['link']) ."' class='block-link' target='_blank'>$output</a>\n";
+
+		return $output;
+	}
+
+	/**
+	 * Gets event properties ready to output.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param array $item The items array.
+	 * 
+	 * @return string The HTML output.
+	 */
+	public function event_properties( $item )
+	{
+
+		if ( ! isset($item['properties']) ) 
+			return null;
+
+		$count = count($item['properties']);
+		
+		$output = null;
+		
+		foreach( $item['properties'] as $key => $property ) {
+			
+			if ( ! $this->is_date($property['text']) ) {
+				
+				$date = $this->format_date($date, 'event');
+
+				$output .= ( $date != false ) ? $date : $property['text'];
+				
+			} else
+				$output .= $property['text'];
+
+			// If there's another line of text
+			if ( $key != ($count - 1) )
+				$output .= "<br />\n";
+								
+		}
+
+		return $output;
+	}
+
+	/**
+	 * Count the number of comments
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param array $item The items array.
+	 * 
+	 * @return string The HTML output.
+	 */
+	public function count_comments( $item )
+	{
+
+		$output = __('No Comments');
+
+		// Check for comments
+		if ( ! isset($item['comments']) )
+			return $output;
+
+		$count =  count($item['comments']['data']);
+
+		if ( $count > 1 ) {
+			$output = __("$count Comments");
+		} else if ( $count == 1 ) {
+			// Is there more then one?
+			$output = __("1 Comment");
+		}
+
+		return $output;
+	}
+
+	/**
+	 * Create the URL to see the item on facebook
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param array $item The item's array.
+	 * 
+	 * @return string The URL.
+	 */
+	public function item_url( $item )
+	{
+		// Split the user/page id from the item id.
+		$id = preg_split('/_/', $item['id']);
+
+		// The URL.
+		$output = 'http://www.facebook.com/'. $id[0] .'/posts/'. $id[1];
+
+		return $output;
+	}
+
+	/**
+	 * 
+	 */
+	public function meta( $item_url, $published, $comments )
+	{
+
+		$container = array(
+			'name' => 'p',
+			'class' => 'fb-date fb-comments',
+			);
+
+		// Link to the item on Facebook.
+		// Contains the published date and the # of comments.
+		$output = "<a href='". $item_url ."' target='_blank' class='quiet' title='". __('See this post on Facebook') ."'>". $published ." &bull; ". $comments ."</a>";
+
+		$output = $this->container($output, $container);
+
+		return $output;
+	}
 }
 
 

@@ -32,7 +32,7 @@ class ffg_Widget extends WP_Widget
 		parent::__construct(
 			'facebook_feed_grabber', // Base ID
 			'Facebook Feed Grabber', // Name
-			array( 'description' => __( 'Displays a public Facebook feed.' ), ) // Args
+			array( 'classname' => 'fb-feed', 'description' => __( 'Displays a public Facebook feed.' ), ) // Args
 		);
 	}
 	
@@ -65,7 +65,7 @@ class ffg_Widget extends WP_Widget
 		$this->get_defaults();
 		
 		$widget_ops = array(
-			'classname' => 'ffg_widget',
+			'classname' => 'widget fb-feed',
 			'description' => 'Display a Facebook feed.'
 		);
 		
@@ -82,7 +82,11 @@ class ffg_Widget extends WP_Widget
 	function widget( $args, $instance ) {
 		extract( $args, EXTR_SKIP );
 		
+		// Get the feed ID if it's there.
 		$feed = ( isset($instance['feed']) ) ? $instance['feed'] : null;
+
+		// Dispable the plugin container. 
+		$instance['container'] = array( 'name' => null );
 		
 		echo $before_widget;
 

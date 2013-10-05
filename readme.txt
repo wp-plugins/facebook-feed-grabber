@@ -1,4 +1,5 @@
 === Facebook Feed Grabber ===
+* changed format_date() to use WP's function human_time_diff().
 Contributors: bonnerl
 Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
@@ -151,16 +152,18 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 == Changelog ==
 
 = 0.9 =
+* Updated HTML markup to better utilize HTML5 semantics. 
 * Improved Widget feed control. 
+* Improved the organization of the options.
 * Fixed failure to turn urls into clickable links in post message.
 * Changed the locale option to retrieve a list of locales via CURL instead of allow_url_fopen.
 * Improved App credential validation.
 * Improved options upgradability.
 * Moved ffg setup class and hooks to it's own file (ffg-setup.php).
 * Improved inline documentation to better match the [WP PHP Documentation Standards](http://make.wordpress.org/core/handbook/inline-documentation-standards/php-documentation-standards/#5-inline-comments).
-* Improved the organization of the options.
 * Improved text localization.
 * Changed the ffg_cache class to be based on static methods and properties.
+* changed format_date() to use WP's function human_time_diff().
 
 = 0.8.2 =
 * Removed call time pass-by-reference for compatibility with PHP 5.4.
@@ -227,11 +230,13 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 == Upgrade Notice ==
 
 = 0.9 =
+* Notice: Revised how container arguments are passed through. Please see the inline documentation in facebook-feed-grabber/facebook.php if you custimized the container.
+* Notice: Updated the HTML to better utilize HTML5 sementics. This may effect any custom stylesheets.
 * Improved the amount of control a widget has over the feed it displays.
 * Fixed failure to turn urls into clickable links in post message.
-* Changed the locale option to retrieve a list of locales via CURL instead of allow_url_fopen.
+* Changed the locale option to retrieve a list of Facebook locales via CURL instead of allow_url_fopen.
 * Improved the organization of the options.
-* Improved text localization.
+* Improved plugin text localization. (Feedback desired if you're utilizing localization.)
 
 = 0.8.2 =
 * Removed call time pass-by-reference for compatibility with PHP 5.4.

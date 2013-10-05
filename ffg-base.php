@@ -49,27 +49,6 @@ class ffg_base
 	 */
 	public $options = false;
 		
-	/**
-	 * Date formats for event times.
-	 * 
-	 * @access public
-	 * @var array date formats.
-	 */
-	public $date_formats = array(
-		// Event date formats
-		'event' => array(
-			'today' => '\T\o\d\a\y \a\t g:ia',
-			'this_year' => 'l, F jS \a\t g:ia',
-			'other_year' => 'l, F jS, Y \a\t g:ia',
-		),
-		// Date formats for when something was posted
-		'feed' => array(
-			'today' => '\T\o\d\a\y \a\t g:ia',
-			'this_year' => 'M jS g:ia',
-			'other_year' => 'M jS, Y g:ia',
-		),
-	);
-
 	/* - - - End of settings - - - */
 	
 	/**
@@ -214,6 +193,173 @@ class ffg_base
 		else
 			return $this;
 	}
+
+	/**
+	 * Get the specified content from Facebook.
+	 * 
+	 * Get the specified content from Facebook making use 
+	 * of caching if enabled.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $path The path.
+	 * @param int $cache_feed The number of minutes to cache the feed.
+	 * 
+	 * @return array The content returned from FB.
+	 */
+	public function fb_content( $path, $cache_feed )
+	{
+		// Get the feed (maybe it's cached?)
+		if ( $cache_feed != 0 ) {
+			
+			// Include ffg_cache class
+			include_once 'caching.php';
+			
+			// Let it do it's magic. (Will return the needed content)
+			return ffg_cache::theMagic($this, $path, ($cache_feed * 60));
+			
+		} else
+			return$this->facebook->api($path);
+
+	}
+
+	/**
+	 * Wraps the given string in a container.
+	 * 
+	 * Wraps the given string in a container.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $output The string to wrap.
+	 * @param string $args An array of argumnts.
+	 * 
+	 * @return string The HTML output.
+	 */
+	public function container( $output, $args = array() )
+	{
+		// If args were provided in a query style string.
+		if ( is_string($args) )
+			parse_str($args, $args);
+		
+		// Default arguments
+		$defaults = array(
+			'name' => 'aside',
+			'class' => '',
+			'id' => '',
+			);
+		
+		// Overwrite the defaults and exract our arguments.
+		extract( array_merge($defaults, $args) );
+
+		if ( empty($name) )
+			return $output;
+
+		// The ID for the container.
+		$id = ( !empty($id) ) ? " id='". $id ."'" : null;
+
+		// The classes for the container.
+		$class = " class='". $class ."'";
+
+		// Open the container element
+		$open = "<". $name . $id . $class .">\n";
+
+		$output .= "\n";
+
+		// Close the container element.
+		$close = "</". $name .">\n";
+
+		return $open . $output . $close;
+	}
+
+	/**
+	 * Looks to see if $text is a date.
+	 * 
+	 * Looks to see if $text is a date in one of the following formats,
+	 * 		-Tomorrow at 5:00pm
+	 * 		-Wednesday at 5:00pm
+	 * 		-Wednesday, August 24 at 5:00pm
+	 * 		-Wednesday, August 24, 2011 at 5:00pm
+	 * 		
+	 * 	
+	 * 
+	 * @since 0.6
+	 * 
+	 * @param string $text The string to test.
+	 * 
+	 * @return mixed Returns false if it is not a date, if is a 
+	 * date the it returns it in a string that strtotime() will 
+	 * recognize. 
+	 */
+	function is_date( $text )
+	{
+		
+		// Days for preg_match regular expression
+		$days = "(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)";
+		// Months for preg_match regular expression
+		$months = "(January|February|March|April|May|June|July|August|September|October|November|December)";
+		
+		// 	if ( preg_match([Tomorrow at time], $text) )
+		if ( preg_match("/^Tomorrow at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
+			$date = "Tomorrow {$date[1]}:{$date[2]}{$date[3]}";
+		
+		// if ( preg_match([day at time], $text) )
+		elseif ( preg_match("/^$days at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
+			$date = "{$date[1]} {$date[2]}:{$date[3]}{$date[4]}";
+
+		// if ( preg_match([day, month day at time], $text) )
+		elseif ( preg_match("/^$days, $months ([0-9]|[12][0-9]|3[01]) at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
+			$date = "{$date[2]} {$date[3]} {$date[4]}:{$date[5]}{$date[6]}";
+		
+		
+		// if ( preg_match([day, month day, year at time], $text) )
+		elseif ( preg_match("/^$days, $months ([0-9]|[12][0-9]|3[01]), (20[0-9][0-9]) at ([1-9]|1[012]):([0-6][0-9])(am|pm)$/i", $text, $date) )
+			$date = "{$date[2]} {$date[3]}, {$date[4]} {$date[5]}:{$date[6]}{$date[7]}";
+		
+		else
+			return false;
+		
+		return $date;
+		
+	}
+
+	/**
+	 * Reformat a date/time to our standards.
+	 * 
+	 * $format = Defaults to feed which means it'll expect a unix 
+	 * timestamp in the first parameter $date. If set to 'event' it 
+	 * will assume we were fed a string that strtotime() will 
+	 * interpret.
+	 * 
+	 * @todo Make the timezone based on logged in Facebook user?
+	 * 
+	 * @since 0.6
+	 * 
+	 * @param string $date The time to format
+	 * @param string $format Format preset name.
+	 * 
+	 * @return mixed Returns false on failure or formated string 
+	 * on success.
+	 */
+	function format_date( $date, $format = 'feed' )
+	{
+		
+		if ( $format == 'event' ) {
+
+			$date = strtotime($date);
+
+			// If we couln't make a unix timestamp
+			if ( $timestamp === false )
+				return false;
+
+		}
+
+		// Convert to our wp timezone
+		$date = $date + ( get_option( 'gmt_offset' ) * 3600 );
+
+		return human_time_diff($date);
+		
+	}
+
 
 }
  ?>

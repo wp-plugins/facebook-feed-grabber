@@ -1,5 +1,4 @@
 #fb-feed {
-	padding: 1px 5px;
 }
 #fb-feed p {
 	font-size: 100%;
@@ -42,7 +41,7 @@
     margin: 0px 10px 10px 0px;
 	max-width: 33%;
 }
-#fb-feed .fb-feed-item blockquote a.the_link {
+#fb-feed .fb-feed-item blockquote a.block-link {
 	display: block;
 	margin-bottom: 8px;
 }
