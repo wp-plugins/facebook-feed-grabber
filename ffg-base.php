@@ -64,6 +64,14 @@ class ffg_base
 	 */
 	private $sdk_loaded = false;
 
+	/**
+	 * The feed ID currently being worked with.
+	 * 
+	 * @since 0.9.0
+	 * @var string The feed ID being worked with
+	 */
+	public $feed_id = null;
+
 	
 	/**
 	 * Fetches facebook app_id and secret and makes a new connection.
@@ -104,9 +112,37 @@ class ffg_base
 			return $this;
 	}
 
+	/**
+	 * Get or set the feed ID.
+	 * 
+	 * Sets the feed ID to the value of $param or gets the feed ID 
+	 * the parameter is omitted. Returns null if it couldn't find one.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $feed_id A feed ID.
+	 * 
+	 * @return string The feed ID being worked with.
+	 */
+	public function feed_id( $feed_id = null )
+	{
+		
+		// See if a feed ID was given to set.
+		if ( ! empty($feed_id) )
+			$this->feed_id = $feed_id;
+
+		// If there isn't already a feed ID for this instance 
+		// then get the default.
+		if ( empty($this->feed_id) )
+			$this->feed_id = $this->options['default_feed'];
+
+		// Return the feed ID.
+		return $this->feed_id;
+	}
+
 	
 	/**
-	 * Load the facebook SDK.
+	 * Load the Facebook SDK.
 	 * 
 	 * Loads the Facebook SDK if this plugin hasn't loaded it 
 	 * and there isn't already a Facebook class.

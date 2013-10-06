@@ -119,14 +119,14 @@ class ffg extends ffg_base
 	function feed( $feed_id = null, $args = array() )
 	{
 
+		// See if we have a valid connection to Facebook.
 		if ( $this->facebook === false )
 			return false;
 
-		// See if we're using the default feed id.
-		if ( empty($feed_id) )
-			$feed_id = $this->options['default_feed'];
+		// Get or set the feed_id.
+		$feed_id = $this->feed_id($feed_id);
 
-		// If we still don't have a feed id…
+		// If we still don't have a feed id.
 		if ( $feed_id == null )
 			return false;
 
@@ -136,17 +136,22 @@ class ffg extends ffg_base
 		
 		// Default arguments
 		$defaults = array(
-			'cache_feed' => $this->options['cache_feed'],
-			'locale' => $this->options['locale'],
-			/**
-			 * @see $this->container() param $args for container values.
-			 */
-			'container' => array(), 
-			'echo' => true,
+			// Feed specific arguments.
 			'limit' => $this->options['limit'],
 			'show_title' => $this->options['show_title'],
 			'show_thumbnails' => $this->options['show_thumbnails'],
 			'num_entries' => $this->options['num_entries'],
+
+			// Misc Settings arguments
+			'cache_feed' => $this->options['cache_feed'],
+			'locale' => $this->options['locale'],
+
+			// The hidden gem arguments.
+			'echo' => true,
+			/**
+			 * @see $this->container() param $args for container values.
+			 */
+			'container' => array(), 
 		);
 		
 		// Overwrite the defaults and exract our arguments.
@@ -168,7 +173,7 @@ class ffg extends ffg_base
 
 
 		// Get the feed title.
-		$output .= $this->the_title($feed_id, $show_title, $cache_feed);
+		$output .= $this->the_title($show_title, $cache_feed);
 
 		foreach($content['data'] as $item) {
 
@@ -271,9 +276,9 @@ class ffg extends ffg_base
 			return true;
 
 		// If we're limiting it to posts from the retrieved page
-		if ( $limit == true ) {
+		if ( $limit ) {
 			// If the post isn't posted by the feed author
-			if ( $feed_id != $item['from']['id'] )
+			if ( $this->feed_id != $item['from']['id'] )
 				return true;
 		}
 
@@ -289,17 +294,19 @@ class ffg extends ffg_base
 	 * 
 	 * @since 0.9.0
 	 * 
-	 * @param string $feed_id ID of the user/page.
 	 * @param boolean $show_title Are we going to display the title?
 	 * @param int $cache_feed The number of minutes to cache the feed.
 	 * 
 	 * @return string The HTML to output.
 	 */
-	public function the_title( $feed_id, $show_title, $cache_feed )
+	public function the_title( $show_title, $cache_feed )
 	{
 
 		if ( ! $show_title )
 			return null;
+
+		// Get the feed ID.
+		$feed_id = $this->feed_id();
 
 		// The "path" for the fb content.
 		$path = '/'. $feed_id .'?date_format=U&locale='. $locale;
@@ -403,7 +410,6 @@ class ffg extends ffg_base
 
 		// The item caption
 		if ( isset($item['caption']) ) {
-			echo "caption";
 
 			if ( preg_match('/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/', $item['caption']) ) {
 				$caption = preg_replace('/^(?!https?:\/\/)/', 'http://', $item['caption']);
@@ -583,22 +589,30 @@ class ffg extends ffg_base
 }
 
 
-/* - - - - - -
-	
-	Used to display a feed without you having to mess with the class.
-	If you're displaying more than one feed I suggest using the class 
-	and not this function.
-		
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/**
+ * Display a facebook feed without having to mess with the ffg class.
+ * 
+ * Display a feed without having to mess with the ffg class. If 
+ * you'r'e displaying more then one feed I suggest initiating and
+ * using one instance of the class.
+ * Returns true on success or false on failure unless you set the echo 
+ * argument to false in which case it returns the feed HTML.
+ * 
+ * @since 0.1
+ * 
+ * @param string $feed_id The feed ID to display.
+ * @param array $args An array of arguments.
+ * 
+ * @return mixed Returns the feed HTML or boolean.
+ */
 function fb_feed( $feed_id = null, $args = array() )
 {
 	
 	$facebook = new ffg();
 	
-	$facebook = $facebook->feed($feed_id, $args);
+	$feed = $facebook->feed($feed_id, $args);
 	
-	return $facebook;
-	
+	return $feed;
 }
 
 
