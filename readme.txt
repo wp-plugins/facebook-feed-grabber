@@ -157,7 +157,7 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Improved the organization of the options.
 * Fixed failure to turn urls into clickable links in post message.
 * Changed the locale option to retrieve a list of locales via CURL instead of allow_url_fopen.
-* Improved App credential validation.
+* Improved App credential validation. (Added validation when the options page is loaded).
 * Improved options upgradability.
 * Moved ffg setup class and hooks to it's own file (ffg-setup.php).
 * Improved inline documentation to better match the [WP PHP Documentation Standards](http://make.wordpress.org/core/handbook/inline-documentation-standards/php-documentation-standards/#5-inline-comments).
@@ -201,7 +201,7 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 = 0.5.2 =
 * Fixed bug. The page link displayed before the feed had an invalid link due to getting the page name instead of the page id.
-* Changed some varible name to make more sense for those looking at the code.
+* Changed some variable name to make more sense for those looking at the code.
 * Improved the documentation a little.
 * Special thanks to Randy Martinsen for bringing the bug and documentation issues to light.
 

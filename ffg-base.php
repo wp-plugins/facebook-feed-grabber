@@ -194,6 +194,50 @@ class ffg_base
 
 	} // End function get_options
 
+	/**
+	 * Verify App ID and Secret.
+	 * 
+	 * Verifies an App ID and Secret. Returns an array with App
+	 * info on success or FALSE on failure.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $appId The App ID.
+	 * @param string $secret The App secret.
+	 * 
+	 * @return mixed Array with App info if successful else it returns false.
+	 */
+	function verify_app_cred( $appId, $secret ) {
+		
+		// Load the facebook SDK.
+		$this->load_sdk();
+		
+		try {
+			// Try to make the connection
+			$facebook = new Facebook(array(
+				  'appId'  => $appId,
+				  'secret' => $secret
+				));
+		} catch (FacebookApiException $e) {
+			return false;
+		}
+
+		// If it couldn't connect…
+		if ( ! $facebook )
+			return false;
+
+		try {
+			// This call will always work since we are fetching public data.
+			$app = $facebook->api('/'. $appId);
+		} catch (FacebookApiException $e) {
+			if ( $e->getType() == "OAuthException" )
+				return false;
+		}
+		
+		return $app;		
+	}
+	// End verify_app_cred()
+
 
 	/**
 	 * Authenticate App Id and Secret and make the initial connection.

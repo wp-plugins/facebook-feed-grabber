@@ -11,8 +11,6 @@ jQuery(document).ready(function($) {
 	
 	// The loading image.
 	var loading = '<img alt="" id="ajax-loading" class="ajax-loading icon" src="'+ ffg_options.wpurl +'/wp-admin/images/loading.gif" style="visibility: visible;" />';
-	var no = '<img alt="" class="icon" src="'+ ffg_options.wpurl +'/wp-admin/images/no.png" />';
-	var yes = '<img alt="" class="icon" src="'+ ffg_options.wpurl +'/wp-admin/images/yes.png" />';
 
 	// When they click the verify button
 	verify.click(function() {
@@ -35,28 +33,11 @@ jQuery(document).ready(function($) {
 		// Make request.
 		jQuery.post(ajaxurl, data, function(response) {
 
-			// if invalid 
-			if ( response.search('Invalid') != '-1' ) {
+			// Display the results.
+			v_span
+				.empty()
+				.append(response);
 				
-				v_span
-					.empty()
-					.append(no +'Invalid App Id or Secret');
-				
-			} else if ( response.substring(0,3).search('^e:[0-9]$') == '0' ) {
-				
-				v_span
-					.empty()
-					.append(no + response.substring(4));
-				
-			// if valid
-			} else {
-				
-				v_span
-					.empty()
-					.append(yes +' '+ response);
-				
-			}
-			
 			// Enable the button
 			verify.removeAttr('disabled');
 			

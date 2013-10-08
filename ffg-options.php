@@ -1,28 +1,74 @@
 <?php
+/**
+ * Everything for our options page.
+ * 
+ * @package Facebook_Feed_Grabber
+ * @since 0.4
+ */
 
-/* - - - - - -
-	
-	Class containing everything for our options page.
-	
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/**
+ * Class containing everything for our options page.
+ * 
+ * Class that hooks in, displays and validats the ffg options page.
+ * 
+ * @since 0.5
+ * 
+ * @return void 
+ */
 class ffg_admin extends ffg_base 
 {
 	
+	/**
+	 * The URL to a list of Facebook's localization choices.
+	 * 
+	 * @access protected
+	 * @var string URL to Facebook's localaization choices.
+	 */
 	protected $locale_xml = 'https://www.facebook.com/translations/FacebookLocales.xml';
+
+	/**
+	 * HTML to display WP's yes.png. Set by __construct().
+	 * 
+	 * @access protected
+	 * @var string HTML to display WP's yes.png.
+	 */
+	protected $yes_img = '/wp-admin/images/yes.png';
 	
+	/**
+	 * HTML to display WP's no.png. Set by __construct().
+	 * 
+	 * @access protected
+	 * @var string HTML to display WP's no.png.
+	 */
+	protected $no_img = '/wp-admin/images/no.png';
+
+	/**
+	 * Gets this class ready.
+	 * 
+	 * Get's the plugin options and sets some other class variables.
+	 * 
+	 * @return void 
+	 */
 	function __construct(  ) {
-		global $ffg_setup;
 
 		$this->options = ffg_base::get_options('ffg_options');
+
+		$this->yes_img = '<img alt="" class="icon" src="'. get_bloginfo('wpurl') . $this->yes_img .'" />';
+		$this->no_img = '<img alt="" class="icon" src="'. get_bloginfo('wpurl') . $this->no_img .'" />';
+
 	}
 	// End __construct()
 	
 	
-	/* - - - - - -
-	
-		Add our menu and hook in our javascript and styles.
-	
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Add our menu and hook in our javascript and styles.
+	 * 
+	 * Add our menu and hook in our javascript and styles.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function add_menu() {
 		
 		$page = add_options_page('Facebook Feed Grabber Options', 'Facebook Feed Grabber', 'manage_options', __file__, array($this, 'options_page'));
@@ -30,14 +76,17 @@ class ffg_admin extends ffg_base
 		add_action( "admin_print_scripts-". $page, array($this, 'javascript') );
 		add_action( "admin_print_styles-". $page, array($this, 'css') );
 	}
-	// End add_menu()
 	
 	
-	/* - - - - - -
-		
-		Register our settings.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Register our settings.
+	 * 
+	 * Register our settings with WordPress.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function settings_api_init() {
 		
 		
@@ -71,13 +120,15 @@ class ffg_admin extends ffg_base
 	// End settings_api_init()
 	
 	
-	/* - - - - - -
-
-		Javascript for the options page…
-
-			-hooked in from the add_menu() function
-
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Hook in javascript for the options page.
+	 * 
+	 * Hook in javascript for the options page.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function javascript() {
 		// Url to plugin directory
 		 $plugin_url = trailingslashit( get_bloginfo('wpurl') ).PLUGINDIR.'/'. dirname( plugin_basename(__FILE__) );
@@ -93,16 +144,17 @@ class ffg_admin extends ffg_base
 			));
 
 	}
-	// End javascript()
 	
 	
-	/* - - - - - -
-
-		Javascript for the options page…
-
-			-hooked in from the add_menu() function
-
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Echos the custom css for the options page.
+	 * 
+	 * Echos the custom css for the options page.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function css() {
 		?>
 		<style type="text/css" media="screen">
@@ -116,11 +168,17 @@ class ffg_admin extends ffg_base
 	// End css()
 	
 	
-	/* - - - - - -
-		
-		The text to display for our setting's sections.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Echo the text to display for our setting's sections.
+	 * 
+	 * Echo the text to display for our setting's sections.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @param array $section Section parameters.
+	 * 
+	 * @return void 
+	 */
 	function setting_section_callback_function( $section ) {
 		switch ( $section['id'] ) {
 			case 'fb_app_info':
@@ -137,14 +195,17 @@ class ffg_admin extends ffg_base
 
 		}
 	}
-	// End setting_section_callback_function
 	
 	
-	/* - - - - - -
-		
-		The options page.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * The options page.
+	 * 
+	 * The options page.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function options_page() {
 		if (!current_user_can('manage_options'))
 			wp_die( __('You do not have sufficient permissions to access this page.') );
@@ -164,53 +225,72 @@ class ffg_admin extends ffg_base
 	}
 	
 		
-	/* - - - - - -
-		
-		App ID field
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * App ID field
+	 * 
+	 * App ID field
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function app_id_field() {
 		?>
 		<input type="text" name="ffg_options[app_id]" value="<?php echo esc_attr($this->options['app_id']); ?>" class="regular-text" id="ffg-app-id" autocomplete="off" />
 		<span class="description"><?php _e('Required for the plugin to work.') ?></span>
 		<?php
 	}
-	// End app_id_field()
 	
 	
-	/* - - - - - -
-		
-		Number of entries field
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Number of entries field
+	 * 
+	 * Number of entries field
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function secret_field() {
 		?>
 		<input type="text" name="ffg_options[secret]" value="<?php echo esc_attr($this->options['secret']); ?>" class="regular-text" id="ffg-secret" autocomplete="off" />
 		<span class="description"><?php _e('Required for the plugin to work.') ?></span>
 		<?php
 	}
-	// End secret_field()
 
 
-	/* - - - - - -
-		
-		Number of entries field
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Number of entries field
+	 * 
+	 * Number of entries field
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function verify_button() {
+		$verify =  $this->verify_app_cred($this->options['app_id'], $this->options['secret']);
+
+		if ( ! $verify )
+			$descript = $this->no_img . __(' Invalid App ID or Secret');
+		else
+			$descript = $this->yes_img . __(' Name: ') . $verify['name'];
 		?>
 		<input type="button" name="ffg_verify" value="<?php _e('Verify App Credentials') ?>" class="button" id="ffg-verify" />
-		<span id="ffg_verify_d" class="description"></span>
+		<span id="ffg_verify_d" class="description"><?php echo $descript; ?></span>
 		<?php
 	}
-	// End verify_button()
 	
 	
-	/* - - - - - -
-		
-		Number of entries field
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Default Feed field.
+	 * 
+	 * Default Feed field.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function default_feed_field() {
 		?>
 		<input type="text" name="ffg_options[default_feed]" value="<?php echo esc_attr($this->options['default_feed']); ?>" class="regular-text" /> 
@@ -220,11 +300,15 @@ class ffg_admin extends ffg_base
 	// End default_feed_field()
 
 
-	/* - - - - - -
-		
-		Number of entries field
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Number of entries field
+	 * 
+	 * Number of entries field
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function num_entries_field() {
 		?>
 		<input type="text" name="ffg_options[num_entries]" value="<?php echo esc_attr($this->options['num_entries']); ?>" class="regular-text" /> 
@@ -234,11 +318,15 @@ class ffg_admin extends ffg_base
 	// End num_entries_field()
 	
 	
-	/* - - - - - -
-		
-		Show locale select box.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Show locale select box.
+	 * 
+	 * Show locale select box.
+	 * 
+	 * @since 0.8.2
+	 * 
+	 * @return void 
+	 */
 	function locale_select() {
 		
 		if ( !function_exists('curl_init') ) {
@@ -276,11 +364,15 @@ class ffg_admin extends ffg_base
 	}
 	
 	
-	/* - - - - - -
-	
-		Proxy URL field
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Proxy URL field
+	 * 
+	 * Proxy URL field
+	 * 
+	 * @since 0.7.1
+	 * 
+	 * @return void 
+	 */
 	function proxy_url_field() {
 		$hide = ' style="display: none;"';
 		?>
@@ -293,14 +385,17 @@ class ffg_admin extends ffg_base
 		</div>
 	<?php
 	}
-	// End proxy_url_field()
 	
 	
-	/* - - - - - -
-		
-		Show cache feed select box.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Show cache feed select box.
+	 * 
+	 * Show cache feed select box.
+	 * 
+	 * @since 0.7
+	 * 
+	 * @return void 
+	 */
 	function cache_feed_select() {
 		
 		// See if there is a cache folder and that it's writable. 
@@ -332,11 +427,15 @@ class ffg_admin extends ffg_base
 	}
 	
 	
-	/* - - - - - -
-		
-		Show feed Title.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Show feed Title checkbox.
+	 * 
+	 * Show feed Title checkbox.
+	 * 
+	 * @since 0.6
+	 * 
+	 * @return void 
+	 */
 	function show_title_checkbox() {
 		$checked =  $this->options['show_title'] ? ' checked="checked" ' : null;
 		?>
@@ -346,14 +445,17 @@ class ffg_admin extends ffg_base
 		</fieldset>
 		<?php
 	}
-	// End show_title_checkbox()
 	
 
-	/* - - - - - -
-		
-		Limit to posts from feed checkbox.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Limit to posts from feed checkbox.
+	 * 
+	 * Limit to posts from feed checkbox.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function limit_checkbox() {
 		$checked =  $this->options['limit'] ? ' checked="checked" ' : null;
 		?>
@@ -363,14 +465,17 @@ class ffg_admin extends ffg_base
 		</fieldset>
 		<?php
 	}
-	// End limit_checkbox()
 
 
-	/* - - - - - -
-		
-		Show thumbnails when available.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Show thumbnails when available.
+	 * 
+	 * Show thumbnails when available.
+	 * 
+	 * @since 0.7
+	 * 
+	 * @return void 
+	 */
 	function show_thumbnails_checkbox() {
 		$checked =  $this->options['show_thumbnails'] ? ' checked="checked" ' : null;
 		?>
@@ -380,14 +485,17 @@ class ffg_admin extends ffg_base
 		</fieldset>
 		<?php
 	}
-	// End show_thumbnails_checkbox()
 
 
-	/* - - - - - -
-		
-		Use default style sheet checkbox. 
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Use default style sheet checkbox.
+	 * 
+	 * Use default style sheet checkbox.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function style_sheet_radio() {
 		?>
 		<fieldset>
@@ -398,14 +506,17 @@ class ffg_admin extends ffg_base
 		</fieldset>
 		<?php
 	}
-	// End default_style_checkbox()
 	
 	
-	/* - - - - - -
-		
-		Delete options on deactivation checkbox.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Delete options on deactivation checkbox.
+	 * 
+	 * Delete options on deactivation checkbox.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function delete_options_checkbox() {
 		$checked =  $this->options['delete_options'] ? ' checked="checked" ' : null;
 		?>
@@ -415,15 +526,18 @@ class ffg_admin extends ffg_base
 		</fieldset>
 		<?php
 	}
-	// End delete_options_checkbox()
 		
 	
-	/* - - - - - -
-
-		Used to verify App Id & Secret from our options page.
-
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	function verif_app_cred() {
+	/**
+	 * Used to verify App Id & Secret from our options page.
+	 * 
+	 * Used to verify App Id & Secret from our options page.
+	 * 
+	 * @since 0.9
+	 * 
+	 * @return mixed description
+	 */
+	function ajax_verif_app_cred() {
 
 		if ( !current_user_can('manage_options') ) {
 			echo __('You do not have sufficient permissions to access this page.');
@@ -434,64 +548,40 @@ class ffg_admin extends ffg_base
 
 		// Verify App ID
 		if ( !preg_match('/[0-9]{10,}/', trim($_POST['app_id'])) ) {
-			echo "e:1-";
+			echo $this->no_img;
 			_e(" Invalid App Id");
 			die();
 		} else
-			$result['app_id'] = trim($_POST['app_id']);
+			$app_id= trim($_POST['app_id']);
 
 		// Verify Secret
 		if ( !preg_match('/[0-9a-z]{27,37}/i', trim($_POST['secret'])) ) {
-			echo "e:2-";
-			_e("Invalid Secret");
+			echo $this->no_img;
+			_e(" Invalid Secret");
 			die();
 		} else
-			$result['secret'] = trim($_POST['secret']);
-		
-		// Load the facebook SDK.
-		$this->load_sdk();
-		
-		try {
-			// Try to make the connection
-			$facebook = new Facebook(array(
-				  'appId'  => $result['app_id'],
-				  'secret' => $result['secret']
-				));
-		} catch (FacebookApiException $e) {
-			echo 'Invalid';
-			die();
-		}
-		
-		// If it couldn't connect…
-		if ( !$facebook ) {
-			echo 'Invalid';
-			die();
-		}
-		
-		try {
-			// This call will always work since we are fetching public data.
-			$app = $facebook->api('/'. $result['app_id'] .'?date_format=U');
-		} catch (FacebookApiException $e) {
-			if ( $e->getType() == "OAuthException" )
-				echo "Invalid";
-			die();
-		}
+			$secret = trim($_POST['secret']);
+	
+		$verify = $this->verify_app_cred($app_id, $secret);		
 
-		if ( $app )
-			echo __('Name') .': '. $app['name'];
+		if ( ! $verify )
+			echo $this->no_img . __(' Invalid App ID or Secret');
 		else
-			echo 'Invalid';
+			echo $this->yes_img . __(' Name: ') . $verify['name'];
 
 		die(); // this is required to return a proper result
 	}
-	// End verify_app_cred()
 	
 	
-	/* - - - - - -
-		
-		Validate our options.
-		
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+	/**
+	 * Validate our options.
+	 * 
+	 * Validate our options.
+	 * 
+	 * @since 0.5
+	 * 
+	 * @return void 
+	 */
 	function validate_options( $input ) {
 
 		if (!current_user_can('manage_options'))
@@ -558,13 +648,12 @@ class ffg_admin extends ffg_base
 		
 		return $input;
 	}
-	// End validate_options()
 
-}
+} // End class ffg_admin
 
 // Hook stuff in.
 $ffg_admin = new ffg_admin();
 add_action('admin_menu', array($ffg_admin, 'add_menu'));
-add_action('wp_ajax_ffg_verif_app_cred', array($ffg_admin, 'verif_app_cred'));
+add_action('wp_ajax_ffg_verif_app_cred', array($ffg_admin, 'ajax_verif_app_cred'));
 add_action('admin_init', array($ffg_admin, 'settings_api_init'));
 ?>
