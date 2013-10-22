@@ -76,68 +76,34 @@ class ffg_base
 	/**
 	 * Fetches facebook app_id and secret and makes a new connection.
 	 * 
+	 * Fetches the Facebook appId and secret from the options unless 
+	 * otherwise specified. Returns this object if successful or false 
+	 * on failure.
+	 * 
 	 * @param string $appId Optional. The App ID to use.
 	 * @param string $secret Optional. The App Secret to use.
 	 * 
-	 * @return boolean True if connected to Facebook.
+	 * @return mixed False if we failed connected to Facebook.
 	 */
 	function __construct( $appId = null, $secret = null )
 	{		
 		$this->options = ffg_base::get_options();
 		
-		// See if we're getting the default App Id.
-		if ( $appId == null )
-			$appId = $this->options['app_id'];
-
-		// See if we're getting the default secret.
-		if ( $secret == null )
-			$secret = $this->options['secret'];
-
-		// See if we have an App Id.
-		if ( $appId == null)
-			return false;
-
-		// See if we have a Secret
-		if ( $secret == null )
+		// Set the app ID.
+		if ( ! $this->set_appId( $appId ) )
 			return false;
 		
-		$this->appId = $appId;
-		$this->secret = $secret;
+		// Set the app secret. Returns false if 
+		if ( ! $this->set_secret( $secret) )
+			return false;
+
+		// Initiate the Facebook class.
+		$facebook = $this->authenticate();
 		
-		$this->authenticate();
-		
-		if ( $this->facebook === false )
+		if ( $facebook === false )
 			return false;
 		else
 			return $this;
-	}
-
-	/**
-	 * Get or set the feed ID.
-	 * 
-	 * Sets the feed ID to the value of $param or gets the feed ID 
-	 * the parameter is omitted. Returns null if it couldn't find one.
-	 * 
-	 * @since 0.9.0
-	 * 
-	 * @param string $feed_id A feed ID.
-	 * 
-	 * @return string The feed ID being worked with.
-	 */
-	public function feed_id( $feed_id = null )
-	{
-		
-		// See if a feed ID was given to set.
-		if ( ! empty($feed_id) )
-			$this->feed_id = $feed_id;
-
-		// If there isn't already a feed ID for this instance 
-		// then get the default.
-		if ( empty($this->feed_id) )
-			$this->feed_id = $this->options['default_feed'];
-
-		// Return the feed ID.
-		return $this->feed_id;
 	}
 
 	
@@ -164,80 +130,6 @@ class ffg_base
 		return true;
 	}
 
-	
-	/**
-	 * Get's the plugin options.
-	 * 
-	 * Get's the plugin options. This has been set up in a way that
-	 * lets us add another options panel in the future if necessary.
-	 *
-	 * @global object The Setup object $ffg_setup
-	 * 
-	 * @param string $set Optional. Name of the options panel to get.
-	 * @return Array Array of plugin options.
-	 **/
-	static public function get_options( $set = 'ffg_options' ) {
-		global $ffg_setup;
-
-		static $options = array();
-
-		if ( array_key_exists($set, $options) )
-			return $options[$set];
-
-		$optionSet = get_option( $set );
-
-		$optionSet = ffg_setup::check_version($optionSet, $set);
-
-		$options[$set] = $optionSet;
-
-		return $optionSet;
-
-	} // End function get_options
-
-	/**
-	 * Verify App ID and Secret.
-	 * 
-	 * Verifies an App ID and Secret. Returns an array with App
-	 * info on success or FALSE on failure.
-	 * 
-	 * @since 0.9.0
-	 * 
-	 * @param string $appId The App ID.
-	 * @param string $secret The App secret.
-	 * 
-	 * @return mixed Array with App info if successful else it returns false.
-	 */
-	function verify_app_cred( $appId, $secret ) {
-		
-		// Load the facebook SDK.
-		$this->load_sdk();
-		
-		try {
-			// Try to make the connection
-			$facebook = new Facebook(array(
-				  'appId'  => $appId,
-				  'secret' => $secret
-				));
-		} catch (FacebookApiException $e) {
-			return false;
-		}
-
-		// If it couldn't connect…
-		if ( ! $facebook )
-			return false;
-
-		try {
-			// This call will always work since we are fetching public data.
-			$app = $facebook->api('/'. $appId);
-		} catch (FacebookApiException $e) {
-			if ( $e->getType() == "OAuthException" )
-				return false;
-		}
-		
-		return $app;		
-	}
-	// End verify_app_cred()
-
 
 	/**
 	 * Authenticate App Id and Secret and make the initial connection.
@@ -247,22 +139,26 @@ class ffg_base
 	function authenticate(  ) {
 		
 		// Check that we have an App ID
-		if ( $this->appId == null )
+		if ( empty($this->appId) && ! $this->set_appId(null) )
 			return false;
 		
 		// Check that we have a secret
-		if ( $this->secret == null )
+		if ( empty($this->secret) && ! $this->set_secret(null) )
 			return false;
 		
-		// Load the facebook SDK.
+		// Load the Facebook SDK.
 		$this->load_sdk();
-				
+
+		// See if we've already initiated the Facebook class.
+		if ( $this->facebook != false )
+			return $this->facebook;
+		
 		// Make our facebook connection.
 		$this->facebook = new Facebook(array(
 			  'appId'  => $this->appId,
 			  'secret' => $this->secret,
 			));
-		
+
 		// Proxy support
 		if ( isset($this->options['proxy_url']) && !empty($this->options['proxy_url']) ) {
 			Facebook::$CURL_OPTS[CURLOPT_PROXY] = $this->options['proxy_url'];
@@ -271,8 +167,9 @@ class ffg_base
 		if ( $this->facebook === false )
 			return false;
 		else
-			return $this;
+			return $this->facebook;
 	}
+
 
 	/**
 	 * Get the specified content from Facebook.
@@ -302,6 +199,320 @@ class ffg_base
 			return$this->facebook->api($path);
 
 	}
+
+
+	/**
+	 * Get's the plugin options.
+	 * 
+	 * Get's the plugin options. This has been set up in a way that
+	 * lets us add another options panel in the future if necessary.
+	 *
+	 * @global object The Setup object $ffg_setup
+	 * 
+	 * @param string $set Optional. Name of the options panel to get.
+	 * @return Array Array of plugin options.
+	 **/
+	static public function get_options( $set = 'ffg_options' ) {
+		global $ffg_setup;
+
+		static $options = array();
+
+		if ( array_key_exists($set, $options) )
+			return $options[$set];
+
+		$optionSet = get_option( $set );
+
+		$optionSet = ffg_setup::check_version($optionSet, $set);
+
+		$options[$set] = $optionSet;
+
+		return $optionSet;
+
+	} // End function get_options
+
+
+	/**
+	 * Set the App ID.
+	 * 
+	 * Set the App ID if it's changed.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $appId The App ID.
+	 * 
+	 * @return boolean True if the App ID was changed.
+	 */
+	public function set_appId( $appId )
+	{
+		// If we weren't given an app Id then check the options.
+		if ( empty($appId) )
+			$appId = $this->options['app_id'];
+
+		// If it needs set.
+		if ( $this->appId != $appId )
+			$this->appId = $appId;
+		else
+			return false;
+
+		return true;
+	}
+
+
+	/**
+	 * 
+	 */
+	public function set_secret( $secret )
+	{
+		// See if we have a Secret
+		if ( empty($secret) )
+			$secret = $this->options['secret'];
+		
+		// If it needs set.
+		if ( $this->secret != $secret )
+			$this->secret = $secret;
+		else
+			return false;
+
+		return true;
+	}
+
+
+	/**
+	 * Get or set the feed ID.
+	 * 
+	 * Sets the feed ID to the value of $param or gets the feed ID if
+	 * the parameter is omitted. Returns null if it couldn't find one.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $feed_id A feed ID.
+	 * 
+	 * @return string The feed ID being worked with.
+	 */
+	public function feed_id( $feed_id = null )
+	{
+		// See if a feed ID was given to set.
+		if ( ! empty($feed_id) )
+			$this->feed_id = $feed_id;
+
+		// If there isn't already a feed ID for this instance 
+		// then get the default.
+		if ( empty($this->feed_id) )
+			$this->feed_id = $this->options['default_feed'];
+
+		// Return the feed ID.
+		return $this->feed_id;
+	}
+
+
+	/**
+	 * Verify App ID and Secret.
+	 * 
+	 * Verifies an App ID and Secret. Returns an array with App
+	 * info on success or FALSE on failure.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $appId The App ID.
+	 * @param string $secret The App secret.
+	 * 
+	 * @return mixed Array with App info if successful else it returns false.
+	 */
+	function verify_app_cred( $appId, $secret ) {
+
+		// If the appID was not provided.
+		if ( empty($appId) )
+			return false;
+
+		// If the secret was not provided.
+		if ( empty($secret) )
+			return false;
+
+		// Load the facebook SDK.
+		$this->load_sdk();
+
+		try {
+			// Try to make the connection
+			$facebook = new Facebook(array(
+				  'appId'  => $appId,
+				  'secret' => $secret
+				));
+		} catch (FacebookApiException $e) {
+			return false;
+		}
+
+		// If it couldn't connect…
+		if ( ! $facebook )
+			return false;
+
+		try {
+			// This call will always work since we are fetching public data.
+			$app = $facebook->api('/'. $appId);
+		} catch (FacebookApiException $e) {
+			return false;
+		}
+
+		$this->set_appId($appId);
+		$this->set_secret($secret);
+		$this->facebook = $facebook;
+		
+		return $app;		
+	}
+
+
+	/**
+	 * Verify feed.
+	 * 
+	 * Verifies a feed. Returns an array with Feed
+	 * info on success or FALSE on failure.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $feed_id The feed's ID.
+	 * 
+	 * @return mixed Array with Feed info if successful else it returns false.
+	 */
+	function verify_feed( $feed_id ) {
+
+		// If there is no feed id.
+		if ( empty($feed_id) )
+			return false;
+
+		// Load the facebook SDK.
+		$this->load_sdk();
+		
+		// Initiate the Facebook class.
+		$facebook = $this->authenticate();
+
+		// If it couldn't connect…
+		if ( ! $facebook )
+			return false;
+
+		try {
+			// This call will always work since we are fetching public data.
+			$feed_info = $facebook->api('/'. $feed_id);
+		} catch (FacebookApiException $e) {
+			return false;
+		}
+		
+		return $feed_info;		
+	}
+
+
+	/**
+	 * 
+	 */
+	public function get_user( $user_id = 'me', $cache = 0 )
+	{
+				// If there is no feed id.
+		if ( empty($user_id) )
+			return false;
+
+		// Load the facebook SDK.
+		$this->load_sdk();
+		
+		// Initiate the Facebook class.
+		$facebook = $this->authenticate();
+		print_r($facebook); echo "hello";
+
+		// If it couldn't connect…
+		if ( ! $facebook )
+			return false;
+
+		// print_r($facebook->getUser());
+
+		try {
+			// This call will always work since we are fetching public data.
+			$user = $this->fb_content('/'. $user_id, $cache);
+		} catch (FacebookApiException $e) {
+		    echo '<pre>'.htmlspecialchars(print_r($e, true)).'</pre>';
+		    exit;
+			return false;
+		}
+		
+		return $user;
+	}
+
+
+	/**
+	 * Taks a URL and gets the user/page ID.
+	 * 
+	 * Taks a URL that is presumed to be a Facebook User or Page 
+	 * timeline URL and gets the user/page ID.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $url A FB user/page url.
+	 * 
+	 * @return mixed Feed ID on success or false on failure.
+	 */
+	public function id_from_url( $url )
+	{
+
+		// Our pattern to match a link.
+		$pattern = '{^((https?|ftp)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[a-zA-Z0-9+&@#/%=~_|])$}';
+
+		if ( ! preg_match($pattern, $url) )
+			return false;
+
+		// Load the facebook SDK.
+		$this->load_sdk();
+		
+		// Initiate the Facebook class.
+		$facebook = $this->authenticate();
+
+		try {
+			$feed = $this->fb_content('/'. $url, $this->options['cache_feed']);
+		} catch (FacebookApiException $e) {
+			return false;
+		}
+
+		if ( $feed and isset($feed['username']) )
+			return $feed['id'];
+
+		return false;
+	}
+	
+
+	/**
+	 * Taks a FB username and gets the user/page ID.
+	 * 
+	 * Taks a username that is presumed to be a Facebook User or Page 
+	 * username and gets the user/page ID.
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @param string $username A FB user/page username.
+	 * 
+	 * @return mixed Feed ID on success or false on failure.
+	 */
+	public function id_from_username( $username )
+	{
+
+		// Our pattern to match a username.
+		$pattern = '{^[a-zA-Z0-9.]+$}';
+
+		if ( ! preg_match($pattern, $username) )
+			return false;
+
+		// Load the facebook SDK.
+		$this->load_sdk();
+		
+		// Initiate the Facebook class.
+		$facebook = $this->authenticate();
+
+		try {
+			$feed = $this->fb_content('/'. $username, $this->options['cache_feed']);
+		} catch (FacebookApiException $e) {
+			return false;
+		}
+
+		if ( $feed and isset($feed['username']) )
+			return $feed['id'];
+
+		return false;
+	}
+
 
 	/**
 	 * Wraps the given string in a container.

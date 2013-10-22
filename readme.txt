@@ -151,7 +151,8 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Changelog ==
 
-= 0.9 =
+= 0.9.0 =
+* Improved flexibility of the default feed field to accept usernames and feed urls. I also now displays the feed name on the options page.
 * Updated HTML markup to better utilize HTML5 semantics. 
 * Improved Widget feed control. 
 * Improved the organization of the options.
@@ -159,7 +160,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Changed the locale option to retrieve a list of locales via CURL instead of allow_url_fopen.
 * Improved App credential validation. (Added validation when the options page is loaded).
 * Improved options upgradability.
+* Changed the options page javascript to use Backbone.js and jQuery.
 * Moved ffg setup class and hooks to it's own file (ffg-setup.php).
+* Moved admin files to an 'admin' folder.
 * Improved inline documentation to better match the [WP PHP Documentation Standards](http://make.wordpress.org/core/handbook/inline-documentation-standards/php-documentation-standards/#5-inline-comments).
 * Improved text localization.
 * Changed the ffg_cache class to be based on static methods and properties.
@@ -229,7 +232,7 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Upgrade Notice ==
 
-= 0.9 =
+= 0.9.0 =
 * Notice: Revised how container arguments are passed through. Please see the inline documentation in facebook-feed-grabber/facebook.php if you custimized the container.
 * Notice: Updated the HTML to better utilize HTML5 sementics. This may effect any custom stylesheets.
 * Improved the amount of control a widget has over the feed it displays.
@@ -237,6 +240,8 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Changed the locale option to retrieve a list of Facebook locales via CURL instead of allow_url_fopen.
 * Improved the organization of the options.
 * Improved plugin text localization. (Feedback desired if you're utilizing localization.)
+* Improved flexibility of the default feed field to accept usernames and feed urls. I also now displays the feed name on the options page.
+
 
 = 0.8.2 =
 * Removed call time pass-by-reference for compatibility with PHP 5.4.

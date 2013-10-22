@@ -35,6 +35,10 @@ License: GPLv2 or Later
 
 define('FFG_VERSION', '0.9.0');
 
+// Get our MVC View class
+if ( ! class_exists('MVCview') )
+	include 'mvc-view.php';
+
 /**
  * Run the settup stuff for the plugin.	
  */
@@ -49,7 +53,7 @@ include_once 'ffg-base.php';
  * Get the ffg options page stuff if in the admin area.
  */
 if ( is_admin() )
-	include_once 'ffg-options.php';
+	include_once 'admin/ffg-admin-setup.php';
 
 /**
  * Hook in ffg widgets.

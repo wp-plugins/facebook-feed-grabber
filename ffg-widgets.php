@@ -211,7 +211,7 @@ class ffg_Widget extends WP_Widget
 	    if( 'widgets.php' != $hook )
 	        return;
 	
-	    wp_enqueue_script( 'ffg-widget-admin', plugins_url('/js/ffg-widget-options.js', __FILE__) );
+	    wp_enqueue_script( 'ffg-widget-admin', plugins_url('/admin/js/ffg-widget-options.js', __FILE__) );
 		
 		// We need to feed some stuff to our script
 		// This allows us to pass PHP variables to the Javascript code. We can pass multiple vars in the array.
