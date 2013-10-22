@@ -157,7 +157,7 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 = 0.5.2 =
 * Fixed bug. The page link displayed before the feed had an invalid link due to getting the page name instead of the page id.
-* Changed some varible name to make more sense for those looking at the code.
+* Changed some variable names to make more sense for those looking at the code.
 * Improved the documentation a little.
 * Special thanks to Randy Martinsen for bringing the bug and documentation issues to light.
 
