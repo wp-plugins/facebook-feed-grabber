@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Allows you to display the feed of a public page or profile on your website. Requires that you create a Facebook Application. Only works with profiles that have public content. To set your App ID & Secret as well as other settings go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.9 Beta
+Version: 0.8.3
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
 License: GPLv2 or Later
@@ -278,6 +278,38 @@ class ffg {
 	}
 	// End format_date()
 
+
+	/**
+	 * Count the number of comments
+	 * 
+	 * @since 0.8.3
+	 * 
+	 * @param array $item The items array.
+	 * 
+	 * @return string The HTML output.
+	 */
+	public function count_comments( $item )
+	{
+
+		$output = __('No Comments');
+
+		// Check for comments
+		if ( ! isset($item['comments']) )
+			return $output;
+
+		$count =  count($item['comments']['data']);
+
+		if ( $count > 1 ) {
+			$output = __("$count Comments");
+		} else if ( $count == 1 ) {
+			// Is there more then one?
+			$output = __("1 Comment");
+		}
+
+		return $output;
+	}
+
+
 	
 	/* - - - - - -
 		
@@ -482,12 +514,8 @@ class ffg {
 				// Format the date
 				$published = $this->format_date($item['created_time']);
 
-				// Check for comments
-				if ( $item['comments']['count'] > 0 ) {
-					$comments = ( $item['comments']['count'] > 1 ) ? __(' Comments') : __(' Comment');
-					$comments = ' &bull; '. $item['comments']->count . $comments;
-				} else
-					$comments = __(' &bull; No Comments');
+
+				$comments = $this->count_comments($item);
 
 				// Create a link to the item on facebook
 				$item_link = preg_split('/_/', $item['id']);
@@ -499,7 +527,7 @@ class ffg {
 				
 				// The published date
 				$date = "<p class='fb-date'>";
-					$date .= "<a href='". $item_link ."' target='_blank' class='quiet' title='". __('See this post on Facebook') ."'>". $published . $comments ."</a>";
+					$date .= "<a href='". $item_link ."' target='_blank' class='quiet' title='". __('See this post on Facebook') ."'>". $published . " ". $comments ."</a>";
 				$date .= "</p>\n";
 				
 				// 
