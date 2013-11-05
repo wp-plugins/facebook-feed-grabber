@@ -19,7 +19,7 @@ class ffg_setup {
 	 * @access protected
 	 * @var string ffg version.
 	 */
-	protected $version = '0.9';
+	protected $version = '0.8.3';
 	
 	/**
 	 * For the defaults. (Look in $this->__construct()).
