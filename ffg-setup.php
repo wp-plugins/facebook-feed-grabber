@@ -3,7 +3,7 @@
  * Settup things for the plugin.
  * 
  * @package Facebook_Feed_Grabber
- * @since 0.9.0
+ * @since 0.8.3
  */
 
 
@@ -19,7 +19,7 @@ class ffg_setup {
 	 * @access protected
 	 * @var string ffg version.
 	 */
-	protected $version = '0.8.3';
+	protected $version = '0.8.4';
 	
 	/**
 	 * For the defaults. (Look in $this->__construct()).

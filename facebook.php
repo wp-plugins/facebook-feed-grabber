@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Allows you to display the feed of a public page or profile on your website. Requires that you create a Facebook Application. Only works with profiles that have public content. To set your App ID & Secret as well as other settings go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.8.3
+Version: 0.8.4
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
 License: GPLv2 or Later
@@ -309,6 +309,63 @@ class ffg {
 		return $output;
 	}
 
+	/**
+	 * Get and format event's time and date.
+	 * 
+	 * Get the specified event name and date/time and 
+	 * prepare it for display.
+	 * 
+	 * @param string Event URL.
+	 * 
+	 * @since 0.8.4
+	 * @return string The events date/time.
+	 */
+	function event_date( $event_url, $args = array() )
+	{
+
+		if ( preg_match('{/events/([0-9]+)/}', $event_url, $match) )
+			$event_id = $match[1];
+		else
+			return null;
+
+		// If args were provided in a query style string.
+		if ( is_string($args) )
+			parse_str($args, $args);
+		
+		// Default arguments
+		$defaults = array(
+			'cache_feed' => $this->options['cache_feed'],
+			'locale' => $this->options['locale'],
+		);
+		
+		// Overwrite the defaults and exract our arguments.
+		extract( array_merge($defaults, $args) );
+
+		// Get the feed (maybe it's cached?)
+		if ( $cache_feed != 0 ) {
+			
+			// Include cache class
+			include_once 'caching.php';
+			
+			// Initiate class
+			$cache = new ffg_cache();
+
+			// Let it do it's magic. (Will return the needed content)
+			$event = $cache->theMagic($this, '/'. $event_id .'/?date_format=U&locale='. $locale, (($cache_feed * 60)));
+			
+		} else
+			$event = $this->facebook->api('/'. $event_id .'/?date_format=U&locale='. $locale);
+
+		if ( ! $event )
+			return false;
+
+		$output = "<p><a href='". $event_url ."' class='the_link' target='_blank'>". $event['name'] ."</a></p>\n";
+		$output .= "<p><small class='caption'>". $this->format_date($event['start_time'], 'event') ."</small></p>\n";
+		$output .= "<p><small>". $event['location'] ."</small></p>\n";
+
+		return $output;
+	}
+
 
 	
 	/* - - - - - -
@@ -482,40 +539,19 @@ class ffg {
 				// Get the description of item or the message of the one who posted the item
 				$story = isset($item['story']) ? trim($item['story']) : null;
 				$story = preg_replace('/\n/', '<br />', $story);
-				
-				// If it's an event…
-				if ( isset($item['properties']) ) {
 
-					$properties = null;
-					
-					foreach( $item['properties'] as $key => $property ) {
-						
-						$date = $this->is_date($property['text']);
-						
-						if ( $date != false ) {
-							
-							$date = $this->format_date($date, 'event');
 
-							$properties .= ( $date != false ) ? $date : $property['text'];
-							
-						} else
-							$properties .= $property['text'];
-
-							// If there's another line of text
-							if ( $key != (count($item['properties']) - 1) )
-								$properties .= "<br />";
-												
-					}// End foreach( $item['properties'] as $key => $property )
-				
-				// End if ( isset($item['properties']) )
-				} else
+				// See if we have an event
+				if ( $item['type'] == 'link' && stristr($item['link'], '/events/') )
+					$properties = $this->event_date($item['link']);
+				else 
 					$properties = null;
 
 				// Format the date
 				$published = $this->format_date($item['created_time']);
 
 
-				$comments = $this->count_comments($item);
+				$comments = ' &bull; '.$this->count_comments($item);
 
 				// Create a link to the item on facebook
 				$item_link = preg_split('/_/', $item['id']);
@@ -551,20 +587,23 @@ class ffg {
 					if ( isset($item['link']) || $descript != null || $properties != null ) {
 						
 						$output .= "<blockquote>\n";
-						
-							$output .= "<p>\n";
-							
+
+							if ( ($show_thumbnails != false && isset($item['picture'])) || (isset($item['link']) && isset($item['name'])) ) {
+
+								$output .= "<p>\n";
+								
 								if ( $show_thumbnails != false && isset($item['picture']) ) {
 									$img = "<img src='". htmlentities($item['picture']) ."' class='thumbnail alignleft' />\n";
 									if ( isset($item['link']) )
 										$output .= "<a href='". esc_attr($item['link']) ."' class='the_link'>$img</a>\n";
 								}
-								
+
 								// The item link
 								if ( isset($item['link']) && isset($item['name']) )
 									$output .= "<a href='". esc_attr($item['link']) ."' class='the_link'>". $item['name'] ."</a>\n";
 								
-							$output .= "</p>\n";
+								$output .= "</p>\n";
+							}
 								
 							// The item caption
 							if ( isset($item['caption']) ) {
@@ -579,20 +618,13 @@ class ffg {
 							}							
 							
 							if ( $descript != null || $properties != null ) {
-								
-								$output .= "<p>\n";
-														
+																						
 								if ( $descript != null )
-									$output .= "<span class='descript'>". $descript ."</span>\n";
-						
-								if ( $descript != null && $properties != null )
-									$output .= "<br /><br />";
+									$output .= "<p class='descript'>". $descript ."</p>\n";
 
 								if ( $properties != null )
 									$output .= $properties;
-								
-								$output .= "</p>\n";
-								
+																
 							}
 
 						$output .= "</blockquote>\n";

@@ -121,6 +121,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Changelog ==
 
+= 0.8.4 =
+* Fixed the display of shared events to show the date/time and location.
+
 = 0.8.3 =
 * Fixed the displayed comment count.
 
@@ -187,6 +190,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Has an options page and `fb_feed($feed_id)` function. 
 
 == Upgrade Notice ==
+
+= 0.8.4 =
+* Fixed the display of shared events to show the date/time and location.
 
 = 0.8.3 =
 * Fixed the displayed comment count.
