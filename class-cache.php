@@ -37,27 +37,72 @@ class ffg_cache {
 	public function __construct(  ) {
 	}
 
+
 	/**
-	 * Get the plugin cache folder.
+	 * Get the cache folder base.
 	 * 
-	 * Get the plugin cache folder with is hidden away in the
-	 * plugin preferences. 
+	 * Get the cache folder base which is stored away in the
+	 * plugin options making it possible to change it. If the 
+	 * value of the stored option is 'wp-content' then we 
+	 * will get the wp-content directory stored in 
+	 * WP_CONTENT_DIR. This makes the process of moving from 
+	 * a dev to production environment transparent when the 
+	 * option has not been touched.
 	 * 
 	 * @since 0.9.0
-	 * 
-	 * @return string The cache folder.
+	 * @return string The cache folder base.
 	 */
-	public static function cache_folder() {
+	public static function cache_base()
+	{
 
-		// If we already have the cache folder then return it.
-		if ( self::$folder != null )
-			return self::$folder;
+		static $folder = null;
+
+		if ( is_string($folder) )
+			return $folder;
 
 		// Get stored plugin options
 		$options = 	ffg_base::get_options();
 
 		// Set the cache folder
-		self::$folder = $options['cache_folder'];
+		$folder = $options['cache_base'];
+
+		if ( $folder == 'wp-content' )
+			$folder = WP_CONTENT_DIR;
+
+		return $folder;
+	}
+
+	/**
+	 * Get the cache folder which is appended to cache base.
+	 * 
+	 * Get the plugin cache folder which is hidden away in the
+	 * plugin options making it possible to change it. Returns false if the directory is not writable. 
+	 * 
+	 * @since 0.9.0
+	 * 
+	 * @return mixed The cache folder or false if it's not writable.
+	 */
+	public static function cache_folder() {
+
+		// If we've already set the cache folder then return it.
+		if ( is_string(self::$folder) )
+			return self::$folder;
+
+		// If we've declared the cache folder unwritable.
+		if ( self::$folder === false )
+			return false;
+
+		// Get stored plugin options
+		$options = 	ffg_base::get_options();
+
+		// Set the cache folder
+		$folder = self::cache_base() . $options['cache_folder'];
+
+		// See if the cache folder is writable. 
+		if ( ! wp_mkdir_p($folder) )
+			self::$folder = false;
+		else
+			self::$folder = $folder;
 
 		return self::$folder;
 	}
@@ -120,12 +165,15 @@ class ffg_cache {
 	 * @param string $file The base file name used for the cached file.
 	 * @param string $expires Cache expiration as a unix timestamp.
 	 * 
-	 * @return boolean If file is cached. 
+	 * @return boolean Is the file cached and valid?
 	 */
-	public static function isCached( $file, $expires ) {		
-		
+	public static function isCached( $file, $expires ) {
+
+		if ( ! self::cache_folder() )
+			return false;
+
 		// Get file path/name.
-		$cache_file = self::cache_folder() . self::getName($file);
+		$cache_file = self::$cache_folder . self::getName($file);
 		
 		// When was the file created.
 		$cachefile_created = ( file_exists($cache_file) ) ? @filemtime($cache_file) : 0;
@@ -138,7 +186,9 @@ class ffg_cache {
 	/**
 	 * Get a file
 	 * 
-	 * Get the cached file.
+	 * Get the cached file. This function does no validation
+	 * beyond verifying the cache folder is valid, it then
+	 * returns the results of file_get_contents.
 	 * 
 	 * @since 0.7
 	 * 
@@ -147,7 +197,11 @@ class ffg_cache {
 	 * @return string The contents of the cached file.
 	 */
 	public static function getCache( $file ) {
-		$cache_file = self::cache_folder() . self::getName($file);
+
+		if ( ! self::cache_folder() )
+			return false;
+
+		$cache_file = self::$cache_folder . self::getName($file);
 		
 		return file_get_contents($cache_file);
 	}
@@ -168,11 +222,16 @@ class ffg_cache {
 	 * @return boolean Results of it's endeavor. 
 	 */
 	public static function saveCache($file, $content) {
+
+		// See if there's a cache folder that's writable.
+		if ( ! self::cache_folder() )
+			return false;
 		
-		$cache_file = self::cache_folder() . self::getName($file);
+		// The file path and name to cache.
+		$cache_file = self::$cache_folder . self::getName($file);
 		
-		// See if there is a cache folder and that it's writable. 
-		if ( wp_mkdir_p(self::cache_folder()) && ( ! file_exists($cache_file) || is_writable($cache_file) ) ) {
+		// Does the file exist, can we write to it?
+		if ( ! file_exists($cache_file) || is_writable($cache_file) ) {
 		
 			$fp = fopen($cache_file, 'w');
 			$write = fwrite($fp, $content);

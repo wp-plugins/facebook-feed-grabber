@@ -24,7 +24,7 @@ class ffg_admin_setup
 	 * 
 	 * @var string Admin file prefix.
 	 */
-	public $file_prefix = 'ffg-admin';
+	public $file_prefix = 'class-admin';
 
 	/**
 	 * Option panels to be added.
@@ -37,8 +37,7 @@ class ffg_admin_setup
 
 	function __construct()
 	{
-		// Hooks in our options panels.
-		$this->options_panels();
+		add_action('init', array($this, 'init'));
 	}
 
 	/**

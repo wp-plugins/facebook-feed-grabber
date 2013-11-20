@@ -5,7 +5,7 @@ Donate link: http://www.lucasbonner.com/redirect/donate/facebook-feed-grabber/
 Tags: Facebook, Social Networking
 Requires at least: 3.0
 Tested up to: 3.6.1
-Stable tag: 0.8.2
+Stable tag: 0.8.4
 License: GPLv2 or Later
 
 Allows you to display the feed of a public page or profile on your website. Requires that you create a Facebook Application.
@@ -161,12 +161,24 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Improved App credential validation. (Added validation when the options page is loaded).
 * Improved options upgradability.
 * Changed the options page javascript to use Backbone.js and jQuery.
-* Moved ffg setup class and hooks to it's own file (ffg-setup.php).
-* Moved admin files to an 'admin' folder.
 * Improved inline documentation to better match the [WP PHP Documentation Standards](http://make.wordpress.org/core/handbook/inline-documentation-standards/php-documentation-standards/#5-inline-comments).
 * Improved text localization.
 * Changed the ffg_cache class to be based on static methods and properties.
-* changed format_date() to use WP's function human_time_diff().
+* changed format_date() to use WP's function human_time_diff() except for events dates which are formated according to the date/time settings in Settings -> General.
+* Improved how the cache folder is stored to make it more friendly when moving from a Dev to Production environment. 
+* Moved caching.php to class-cache.php
+* Moved ffg-base.php to class-facebook-base.php
+* Moved mvc-view.php to class-mvc-view.php
+* Moved ffg-widgets.php to class-widget.php
+* Moved ffg-setup.php to setup.php
+* Moved admin classes/files to an 'admin' folder.
+
+= 0.8.4 =
+* Fixed the display of shared events to show the date/time and location.
+
+= 0.8.3 =
+* Fixed the displayed comment count.
+* Moved ffg setup class and hooks to it's own file (ffg-setup.php).
 
 = 0.8.2 =
 * Removed call time pass-by-reference for compatibility with PHP 5.4.
@@ -241,7 +253,13 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 * Improved the organization of the options.
 * Improved plugin text localization. (Feedback desired if you're utilizing localization.)
 * Improved flexibility of the default feed field to accept usernames and feed urls. I also now displays the feed name on the options page.
+* Improved how the cache folder is stored to make it more friendly when moving from a Dev to Production environment. 
 
+= 0.8.4 =
+* Fixed the display of shared events to show the date/time and location.
+
+= 0.8.3 =
+* Fixed the displayed comment count.
 
 = 0.8.2 =
 * Removed call time pass-by-reference for compatibility with PHP 5.4.

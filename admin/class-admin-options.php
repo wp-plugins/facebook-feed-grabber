@@ -6,6 +6,9 @@
  * @since 0.4
  */
 
+// Get our cache class
+include_once FFG_PATH .'/class-cache.php';
+
 /**
  * Class containing everything for our options page.
  * 
@@ -109,6 +112,15 @@ class ffg_admin_options extends ffg_admin_base
 
 		// Get the options.
 		$this->options = ffg_base::get_options('ffg_options');
+
+		if ( ! ffg_cache::cache_folder() ) {
+			$this->options['cache_feed'] = 0;
+			
+			// Tell wp of the error (wp 3+)
+			if ( function_exists('add_settings_error') )
+				add_settings_error( 'ffg_cache_folder', 'cache-folder', __('We were unable to create directory '. $this->defaults['cache_folder'] .' which would be used for caching the feed to reduce page load time. Check to see if it\'s parent directory writable by the server?') );
+		}
+
 
 		if ( isset($_GET['page']) && $_GET['page'] == 'ffg_options' ) {
 			// Verify the app credentials.
@@ -677,7 +689,7 @@ class ffg_admin_options extends ffg_admin_base
 	function cache_feed_select() {
 		
 		// See if there is a cache folder and that it's writable. 
-		if ( ! wp_mkdir_p($this->options['cache_folder']) ) {
+		if ( ! ffg_cache::cache_folder() ) {
 			$nocache = true;
 			$this->options['cache_feed'] = 0;
 		} else 

@@ -190,7 +190,7 @@ class ffg_base
 		if ( $cache_feed != 0 ) {
 			
 			// Include ffg_cache class
-			include_once 'caching.php';
+			include_once 'class-cache.php';
 			
 			// Let it do it's magic. (Will return the needed content)
 			return ffg_cache::theMagic($this, $path, ($cache_feed * 60));
@@ -634,20 +634,28 @@ class ffg_base
 	function format_date( $date, $format = 'feed' )
 	{
 		
-		if ( $format == 'event' ) {
+		switch( $format ) {
+			case 'event':
+				$date = strtotime($date);
 
-			$date = strtotime($date);
+				// Convert to our wp timezone
+				$date = $date + ( get_option( 'gmt_offset' ) * 3600 );
 
-			// If we couln't make a unix timestamp
-			if ( $timestamp === false )
-				return false;
+				// If we couln't make a unix timestamp
+				if ( $timestamp === false )
+					return false;
 
+				return date_i18n( get_option('date_format'), $date ) .(" at "). date_i18n( get_option('time_format'), $date );
+				break;
+
+			case 'feed':
+			default:
+				// Convert to our wp timezone
+				$date = $date + ( get_option( 'gmt_offset' ) * 3600 );
+
+				return human_time_diff($date) . __(" ago");
+				break;
 		}
-
-		// Convert to our wp timezone
-		$date = $date + ( get_option( 'gmt_offset' ) * 3600 );
-
-		return human_time_diff($date);
 		
 	}
 

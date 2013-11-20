@@ -34,31 +34,32 @@ License: GPLv2 or Later
  */
 
 define('FFG_VERSION', '0.9.0');
+define('FFG_PATH', dirname(__FILE__));
 
 // Get our MVC View class
 if ( ! class_exists('MVCview') )
-	include 'mvc-view.php';
+	include 'class-mvc-view.php';
 
 /**
  * Run the settup stuff for the plugin.	
  */
-include_once 'ffg-setup.php';
+include_once 'setup.php';
 
 /**
  * Get the base class for ffg.
  */
-include_once 'ffg-base.php';
+include_once 'class-facebook-base.php';
 
 /**
  * Get the ffg options page stuff if in the admin area.
  */
 if ( is_admin() )
-	include_once 'admin/ffg-admin-setup.php';
+	include_once 'admin/class-admin-setup.php';
 
 /**
  * Hook in ffg widgets.
  */
-include_once 'ffg-widgets.php';
+include_once 'class-widget.php';
 
 /**
  * A class to display a wordpress feed.
@@ -171,10 +172,8 @@ class ffg extends ffg_base
 		// The container will be added at the end.
 		$output = NULL;
 
-
 		// Count the items as we use them.
 		$count = 0;
-
 
 		// Get the feed title.
 		$output .= $this->the_title($show_title, $cache_feed);
@@ -187,17 +186,14 @@ class ffg extends ffg_base
 			// Who posted this status.
 			$from = $this->from($item);
 
-			// Get the message
+			// Get the message. 
+			// (Usually this is written by the user)
 			$message = $this->story($item, 'message');
 
-			// Get the description.
-			$descript = $this->story($item, 'description');
-
 			// Get the 'story'
+			// (Context about the status from Facebook)
+			// AKA So and so made an event.
 			$story = $this->story($item, 'story');
-
-			// Get event properties
-			$properties = $this->event_properties($item);
 
 			// Format the date
 			$published = $this->format_date($item['created_time']);
@@ -208,7 +204,7 @@ class ffg extends ffg_base
 			// Get the item url.
 			$item_url = $this->item_url($item);
 
-			// Get the meta paragraph
+			// Create the meta paragraph
 			$meta = $this->meta($item_url, $published, $comments);
 
 			$item_output = null;
@@ -221,10 +217,11 @@ class ffg extends ffg_base
 			if ( $message != null  )
 				$item_output .= $this->container($message, array('name' => 'div', 'class' => 'fb-content'));
 
+			// Else the story from FB.
 			else if ( $story != null )
 				$item_output .= $this->container($story, array('name' => 'div', 'class' => 'fb-content'));
 
-			$item_output .= $this->shared_link($item, $show_thumbnails, $descript, $properties);
+			$item_output .= $this->shared_link($item, $show_thumbnails);
 
 			$item_output .= $meta;
 
@@ -395,21 +392,33 @@ class ffg extends ffg_base
 		return $output;
 	}
 
+
 	/**
 	 * 
 	 */
-	public function shared_link( $item, $show_thumbnails, $descript, $properties )
+	public function shared_link( $item, $show_thumbnails )
 	{
-		// See if there's something like a link or video to show.
-		if ( ! isset($item['link']) && $descript == null && $properties == null )
+		// See if there's a link to display
+		if ( ! isset($item['link']) )
 			return null;
 
 		$output = null;
+
+		// See if this is a link to an event.
+		if ( stristr($item['link'], '/events/') )
+			$event = $this->shared_event($item['link']);
+		else
+			$event = false;
 		
-		// The item link
-		if ( isset($item['link']) && isset($item['name']) )
+		// The shared link
+		if ( isset($item['name']) )
 			$output .= "<a href='". esc_attr($item['link']) ."' class='block-link' target='_blank'>". esc_attr($item['name']) ."</a>\n";
-									
+
+		// Shared Event Link
+		elseif ( $event != false )
+			$output .= "<a href='". esc_attr($item['link']) ."' class='block-link' target='_blank'>". esc_attr($event['name']) ."</a>\n";
+		
+		// Shared image
 		$output .= $this->thumbnail($item, $show_thumbnails);
 
 		// The item caption
@@ -422,17 +431,15 @@ class ffg extends ffg_base
 			} else
 				$caption = $item['caption'];
 				
-			$output .= $this->container($caption, array('name' => 'p', 'class' => 'caption'));
-		}							
-		
-		if ( $descript != null || $properties != null ) {
-												
-			if ( $descript != null )
-				$output .= $descript;
-	
-			if ( $properties != null )
-				$output .= $properties;
-						
+			$output .= "<p class='meta'>". $caption ."</p>\n";
+		}
+
+		if ( isset($item['descript']) )
+			$output .= $this->story($item, 'descript');
+
+		if ( $event != false ) {
+			$output .= "<p class='meta'><small>". $this->format_date($event['start_time'], 'event') ."</small></p>\n";
+			$output .= "<p><small>". $event['location'] ."</small></p>\n";
 		}
 
 		$container = array(
@@ -442,6 +449,49 @@ class ffg extends ffg_base
 
 		return $this->container($output, $container);
 	}
+
+
+	/**
+	 * Get and format event's time and date.
+	 * 
+	 * Get the specified event name and date/time and 
+	 * prepare it for display.
+	 * 
+	 * @param string Event URL.
+	 * 
+	 * @since 0.8.4
+	 * @return string The events date/time.
+	 */
+	function shared_event( $event_url, $args = array() )
+	{
+
+		if ( preg_match('{/events/([0-9]+)/}', $event_url, $match) )
+			$event_id = $match[1];
+		else
+			return null;
+
+		// If args were provided in a query style string.
+		if ( is_string($args) )
+			parse_str($args, $args);
+		
+		// Default arguments
+		$defaults = array(
+			'cache_feed' => $this->options['cache_feed'],
+			'locale' => $this->options['locale'],
+		);
+		
+		// Overwrite the defaults and exract our arguments.
+		extract( array_merge($defaults, $args) );
+
+		// Get the content and use caching if enabled.
+		$event = $this->fb_content('/'. $event_id .'/?date_format=U&locale='. $locale, $cache_feed);
+
+		if ( ! $event )
+			return false;
+
+		return $event;
+	}
+
 		
 	/**
 	 * Searches text to find urls and make them into hyperlinks.

@@ -35,15 +35,7 @@ class ffg_setup {
 	 * @return void
 	 */
 	function __construct(  ) {
-		
-		if ( ! wp_mkdir_p($this->defaults['cache_folder']) ) {
-			$this->defaults['cache_feed'] = 0;
-			
-			// Tell wp of the error (wp 3+)
-			if ( function_exists('add_settings_error') )
-				add_settings_error( 'ffg_cache_folder', 'cache-folder', __('We were unable to create directory '. $this->defaults['cache_folder'] .' which would be used for caching the feed to reduce page load time. Check to see if it\'s parent directory writable by the server?') );
-		}
-		
+				
 	}
 
 	/**
@@ -66,7 +58,8 @@ class ffg_setup {
 				'default_feed' => null,
 				'show_title' => 1,
 				'cache_feed' => 5,
-				'cache_folder' => WP_CONTENT_DIR. '/uploads/cache/',
+				'cache_base' => 'wp-content',
+				'cache_folder' => '/uploads/cache/',
 				'num_entries' => 3,
 				'locale' => 'en_US',
 				'proxy_url' => null,
@@ -96,6 +89,10 @@ class ffg_setup {
 	 * @return void 
 	 */
 	function activate() {
+
+		// Display the admin notification
+		add_action( 'admin_notices', array( $this, 'activation_notice' ) ) ;
+
 	
 		// Get stored plugin options
 		$options = get_option('ffg_options');
@@ -106,7 +103,7 @@ class ffg_setup {
 			$options = $this->defaults;
 		
 		// If the defined settings aren't for this version add any new settings.
-		} else if ( $options['version'] != FFG_VERSION) {
+		} else if ( $options['version'] != FFG_VERSION ) {
 			
 			$options = array_merge($this->defaults, $options);
 			
@@ -115,6 +112,18 @@ class ffg_setup {
 		$options['version'] = FFG_VERSION;
 	
 		update_option('ffg_options', $options);
+	}
+
+
+	public function activation_notice()
+	{
+		$output = '<div class="updated">';
+			$output .= '<p>';
+			$output .= __( 'Facebook Feed Grabber has been activated. Head on over to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a> to get it ready to use!', 'advanced-google-analytics' );
+			$output .= '</p>';
+		$output .= "</div><!-- /.updated -->\n";
+
+		echo $output;
 	}
 
 	
@@ -163,23 +172,23 @@ class ffg_setup {
 	}
 		
 	
-	function check_version( $optionSet, $set = 'ffg-options' )
+	function check_version( $options, $set = 'ffg-options' )
 	{
 
-		if ( empty($optionSet) )
+		if ( empty($options) )
 			return self::upgrade(array(), $set);
 
 		// See if we need to upgrade the options.
-		switch ( version_compare($optionSet['version'], FFG_VERSION) ) {
+		switch ( version_compare($options['version'], FFG_VERSION) ) {
 			case -1:
 			case 1:
-				return self::upgrade($optionSet, $set);			
+				return self::upgrade($options, $set);			
 				break;
 
 
 			case 0:
 			default:
-				return $optionSet;
+				return $options;
 				break;
 		}
 	}
@@ -192,13 +201,29 @@ class ffg_setup {
 	 * @param array $options The options to be upgraded.
 	 * @return void
 	 **/
-	function upgrade( $optionSet, $set ) {
-		$optionSet = array_merge(self::get_defaults($set), $optionSet); 	
-		$optionSet['version'] = FFG_VERSION;
+	function upgrade( $options, $set ) {
 
-		update_option($set, $optionSet);
+		$defaults = self::get_defaults($set);
 
-		return $optionSet;
+		// See if we need to update the stored cache folder by
+		// seeing if it's current value matches the old value.
+		if ( $options['cache_folder'] == WP_CONTENT_DIR . $defaults['cache_folder'] ) {
+
+			$options['cache_folder'] = $defaults['cache_folder'];
+
+		// See if there's a custom cache folder under the old format.
+		} elseif ( !isset($options['cache_base']) ) {
+
+			$options['cache_base'] == '';
+
+		}
+
+		$options = array_merge($defaults, $options);
+		$options['version'] = FFG_VERSION;
+
+		update_option($set, $options);
+
+		return $options;
 	} // End function upgrade
 	
 	
