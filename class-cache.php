@@ -173,7 +173,7 @@ class ffg_cache {
 			return false;
 
 		// Get file path/name.
-		$cache_file = self::$cache_folder . self::getName($file);
+		$cache_file = self::$folder . self::getName($file);
 		
 		// When was the file created.
 		$cachefile_created = ( file_exists($cache_file) ) ? @filemtime($cache_file) : 0;
@@ -201,7 +201,7 @@ class ffg_cache {
 		if ( ! self::cache_folder() )
 			return false;
 
-		$cache_file = self::$cache_folder . self::getName($file);
+		$cache_file = self::$folder . self::getName($file);
 		
 		return file_get_contents($cache_file);
 	}
@@ -228,7 +228,7 @@ class ffg_cache {
 			return false;
 		
 		// The file path and name to cache.
-		$cache_file = self::$cache_folder . self::getName($file);
+		$cache_file = self::$folder . self::getName($file);
 		
 		// Does the file exist, can we write to it?
 		if ( ! file_exists($cache_file) || is_writable($cache_file) ) {
