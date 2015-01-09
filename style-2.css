@@ -7,14 +7,11 @@
 	padding: 0px;
 }
 #fb-feed p.fb-page-name {
-	/* The facebook icon has been shared by WPZOOM Social Networking Icon Set by WPZOOM under the Creative Commons Attribution-Share Alike 3.0 Unported License. http://www.wpzoom.com */
-	background: url('images/facebook.png') no-repeat scroll left center;
 	font-size: 125%;
 	font-weight: bold;
 	line-height: 125%;
 	margin-top: 8px;
 	min-height: 30px;
-	padding-left: 30px;
 	text-align: left;
 }
 #fb-feed .fb-feed-item {

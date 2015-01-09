@@ -121,6 +121,9 @@ Because you have either supplied an invalid App Id & Secret combo or you're tryi
 
 == Changelog ==
 
+= 0.8.5 =
+* Removed Facebook icon with a license incompatible with WordPress.
+
 = 0.8.4 =
 * Fixed the display of shared events to show the date/time and location.
 
