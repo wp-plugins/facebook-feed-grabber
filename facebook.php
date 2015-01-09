@@ -3,7 +3,7 @@
 Plugin Name: Facebook Feed Grabber
 Plugin URI: http://wordpress.org/extend/plugins/facebook-feed-grabber/
 Description: Allows you to display the feed of a public page or profile on your website. Requires that you create a Facebook Application. Only works with profiles that have public content. To set your App ID & Secret as well as other settings go to <a href="options-general.php?page=facebook-feed-grabber/ffg-options.php">Settings &rarr; Facebook Feed Grabber</a>.
-Version: 0.8.4
+Version: 0.8.5
 Author: Lucas Bonner
 Author URI: http://www.lucasbonner.com 
 License: GPLv2 or Later
